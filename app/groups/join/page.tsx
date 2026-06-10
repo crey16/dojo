@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { isSupabaseConfigured } from '@/lib/supabase/config'
+import { joinGroupAction } from '@/app/actions/groups'
 import { joinGroup } from '@/lib/data/groups'
 import { getCurrentUserId } from '@/lib/data/auth'
 
@@ -20,8 +22,20 @@ export default function JoinGroupPage() {
     setLoading(true)
     setError('')
 
-    const userId = await getCurrentUserId()
-    const { group, error: gError } = await joinGroup(code.trim(), userId)
+    let group = null
+    let gError: string | null = null
+
+    if (isSupabaseConfigured()) {
+      const result = await joinGroupAction(code.trim())
+      group = result.group
+      gError = result.error
+    } else {
+      const userId = await getCurrentUserId()
+      const result = await joinGroup(code.trim(), userId)
+      group = result.group
+      gError = result.error
+    }
+
     if (gError || !group) {
       setError(gError ?? 'Invalid invite code')
       setLoading(false)

@@ -38,10 +38,23 @@ create policy "Users can insert own profile" on public.profiles for insert with 
 -- Groups
 create policy "Members can view their groups" on public.groups for select
   using (public.is_group_member(id, auth.uid()));
+-- Needed so insert ... returning works before the creator's membership row exists
+create policy "Creators can view their groups" on public.groups for select
+  using (created_by = auth.uid());
 create policy "Authenticated users can create groups" on public.groups for insert
   with check (auth.uid() is not null);
 create policy "Admins can update group" on public.groups for update
   using (public.is_group_admin(id, auth.uid()));
+
+-- Look up a group by invite code without being a member yet (RLS would hide it)
+create or replace function public.get_group_by_invite_code(p_invite_code text)
+returns setof public.groups as $$
+  select * from public.groups where invite_code = upper(p_invite_code);
+$$ language sql security definer stable;
+
+-- Execute is granted via PUBLIC by default; revoking from anon alone does nothing
+revoke execute on function public.get_group_by_invite_code(text) from public, anon;
+grant execute on function public.get_group_by_invite_code(text) to authenticated;
 
 -- Group members
 create policy "Members can view group members" on public.group_members for select

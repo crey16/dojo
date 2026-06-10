@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { isSupabaseConfigured } from '@/lib/supabase/config'
+import { createGroupAction } from '@/app/actions/groups'
 import { createGroup } from '@/lib/data/groups'
 import { getCurrentUserId } from '@/lib/data/auth'
 
@@ -20,8 +22,20 @@ export default function CreateGroupPage() {
     setLoading(true)
     setError('')
 
-    const userId = await getCurrentUserId()
-    const { group, error: gError } = await createGroup(name.trim(), userId)
+    let group = null
+    let gError: string | null = null
+
+    if (isSupabaseConfigured()) {
+      const result = await createGroupAction(name.trim())
+      group = result.group
+      gError = result.error
+    } else {
+      const userId = await getCurrentUserId()
+      const result = await createGroup(name.trim(), userId)
+      group = result.group
+      gError = result.error
+    }
+
     if (gError || !group) {
       setError(gError ?? 'Failed to create group')
       setLoading(false)

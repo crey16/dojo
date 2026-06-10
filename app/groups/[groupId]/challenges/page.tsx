@@ -8,9 +8,11 @@ import { LoadingState } from '@/components/ui/LoadingState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Button } from '@/components/ui/Button'
 import { Textarea } from '@/components/ui/Textarea'
-import { getChallenges, submitChallenge, getSubmissions } from '@/lib/data/challenges'
+import { getChallenges, getSubmissions } from '@/lib/data/challenges'
 import { getCurrentUserId } from '@/lib/data/auth'
 import { getMemberRole } from '@/lib/data/members'
+import { isSupabaseConfigured } from '@/lib/supabase/config'
+import { submitChallengeAction } from '@/app/actions/challenges'
 import type { Challenge, ChallengeSubmission } from '@/lib/types'
 
 export default function ChallengesPage() {
@@ -47,9 +49,13 @@ export default function ChallengesPage() {
   async function handleSubmit() {
     if (!submitTarget || !proof.trim()) return
     setSubmitting(true)
-    const { error } = await submitChallenge(submitTarget.id, userId, groupId, proof.trim())
+
+    const { error } = isSupabaseConfigured()
+      ? await submitChallengeAction(submitTarget.id, groupId, proof.trim())
+      : { error: null }
+
     if (!error) {
-      setSuccessMsg(`🚀 Challenge submitted! Admin will review soon.`)
+      setSuccessMsg('🚀 Challenge submitted! Admin will review soon.')
       const subs = await getSubmissions(groupId)
       setSubmissions(subs)
     }
@@ -60,7 +66,6 @@ export default function ChallengesPage() {
 
   const mySubmissions = submissions.filter(s => s.user_id === userId)
   const submittedIds = new Set(mySubmissions.map(s => s.challenge_id))
-
   const activeChallenges = challenges.filter(c => c.active)
   const inactiveChallenges = challenges.filter(c => !c.active)
 
@@ -77,7 +82,6 @@ export default function ChallengesPage() {
         </div>
       )}
 
-      {/* Submit modal */}
       {submitTarget && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center p-4 lg:items-center">
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">

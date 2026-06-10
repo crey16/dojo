@@ -12,12 +12,16 @@ import { Badge } from '@/components/ui/Badge'
 import { MonsterAvatar } from '@/components/MonsterAvatar'
 import { Confetti } from '@/components/Confetti'
 import { LoadingState } from '@/components/ui/LoadingState'
-import { getGroupMembers, getMemberRole, removeMember } from '@/lib/data/members'
-import { getPointCategories, awardPoints, getRecentActivity } from '@/lib/data/points'
-import { getRewards, createReward, getRedemptions, updateRedemptionStatus } from '@/lib/data/rewards'
-import { getChallenges, createChallenge, getSubmissions, updateSubmissionStatus } from '@/lib/data/challenges'
+import { getGroupMembers, getMemberRole } from '@/lib/data/members'
+import { getPointCategories, getRecentActivity } from '@/lib/data/points'
+import { getRewards, getRedemptions } from '@/lib/data/rewards'
+import { getChallenges, getSubmissions } from '@/lib/data/challenges'
 import { getCurrentUserId } from '@/lib/data/auth'
 import { getGroup } from '@/lib/data/groups'
+import { isSupabaseConfigured } from '@/lib/supabase/config'
+import { awardPointsAction } from '@/app/actions/points'
+import { createRewardAction, updateRedemptionStatusAction } from '@/app/actions/rewards'
+import { createChallengeAction, updateSubmissionStatusAction } from '@/app/actions/challenges'
 import { formatRelativeTime } from '@/lib/utils'
 import type { GroupMember, PointCategory, Reward, RewardRedemption, Challenge, ChallengeSubmission, PointEvent } from '@/lib/types'
 
@@ -110,7 +114,10 @@ export default function AdminPage() {
     const reason = awardReason.trim() || category?.name || 'Points awarded'
     const positive = amount > 0
 
-    const { error } = await awardPoints(groupId, awardMember, userId, amount, awardCategory || null, reason)
+    const { error } = isSupabaseConfigured()
+      ? await awardPointsAction(groupId, awardMember, amount, awardCategory || null, reason)
+      : { error: null }
+
     if (!error) {
       if (positive) setConfetti(true)
       setAwardMsg(positive ? `✅ Good Job! +${amount} points awarded!` : `😬 Uh Oh! ${amount} points removed.`)
@@ -129,12 +136,9 @@ export default function AdminPage() {
   async function handleCreateReward(e: React.FormEvent) {
     e.preventDefault()
     setRewardLoading(true)
-    const { error } = await createReward(groupId, {
-      title: rewardTitle,
-      description: rewardDesc,
-      cost: parseInt(rewardCost),
-      active: true,
-    })
+    const { error } = isSupabaseConfigured()
+      ? await createRewardAction(groupId, { title: rewardTitle, description: rewardDesc, cost: parseInt(rewardCost), active: true })
+      : { error: null }
     if (!error) {
       setRewardTitle(''); setRewardDesc(''); setRewardCost('')
       const rws = await getRewards(groupId)
@@ -146,14 +150,9 @@ export default function AdminPage() {
   async function handleCreateChallenge(e: React.FormEvent) {
     e.preventDefault()
     setChallengeLoading(true)
-    const { error } = await createChallenge(groupId, {
-      title: challengeTitle,
-      description: challengeDesc,
-      points: parseInt(challengePoints),
-      due_date: challengeDue || null,
-      active: true,
-      created_by: userId,
-    })
+    const { error } = isSupabaseConfigured()
+      ? await createChallengeAction(groupId, { title: challengeTitle, description: challengeDesc, points: parseInt(challengePoints), due_date: challengeDue || null, active: true, created_by: userId })
+      : { error: null }
     if (!error) {
       setChallengeTitle(''); setChallengeDesc(''); setChallengePoints(''); setChallengeDue('')
       const chs = await getChallenges(groupId)
@@ -163,13 +162,13 @@ export default function AdminPage() {
   }
 
   async function handleRedemptionStatus(id: string, status: 'approved' | 'denied') {
-    await updateRedemptionStatus(id, status)
+    if (isSupabaseConfigured()) await updateRedemptionStatusAction(id, status)
     const redemps = await getRedemptions(groupId)
     setRedemptions(redemps)
   }
 
   async function handleSubmissionStatus(sub: ChallengeSubmission, status: 'approved' | 'denied') {
-    await updateSubmissionStatus(sub.id, status, groupId, sub.user_id, sub.challenge?.points ?? 0)
+    if (isSupabaseConfigured()) await updateSubmissionStatusAction(sub.id, status, groupId, sub.user_id, sub.challenge?.points ?? 0)
     const subs = await getSubmissions(groupId)
     setSubmissions(subs)
     if (status === 'approved') setConfetti(true)

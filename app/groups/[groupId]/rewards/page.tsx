@@ -8,13 +8,15 @@ import { LoadingState } from '@/components/ui/LoadingState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Button } from '@/components/ui/Button'
 import { Confetti } from '@/components/Confetti'
-import { getRewards, redeemReward, getRedemptions } from '@/lib/data/rewards'
+import { Badge } from '@/components/ui/Badge'
+import { getRewards, getRedemptions } from '@/lib/data/rewards'
 import { getUserTotalPoints } from '@/lib/data/points'
 import { getCurrentUserId } from '@/lib/data/auth'
 import { getMemberRole } from '@/lib/data/members'
+import { isSupabaseConfigured } from '@/lib/supabase/config'
+import { redeemRewardAction } from '@/app/actions/rewards'
 import type { Reward, RewardRedemption } from '@/lib/types'
 import { formatRelativeTime } from '@/lib/utils'
-import { Badge } from '@/components/ui/Badge'
 
 export default function RewardsPage() {
   const params = useParams()
@@ -51,7 +53,10 @@ export default function RewardsPage() {
 
   async function handleRedeem(reward: Reward) {
     setRedeeming(true)
-    const { error } = await redeemReward(reward.id, userId, groupId)
+    const { error } = isSupabaseConfigured()
+      ? await redeemRewardAction(reward.id, groupId)
+      : { error: null }
+
     if (!error) {
       setConfetti(true)
       setSuccessMsg(`🎉 Redemption submitted for "${reward.title}"! Wait for admin approval.`)
