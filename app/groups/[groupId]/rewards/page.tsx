@@ -10,9 +10,9 @@ import { Button } from '@/components/ui/Button'
 import { Confetti } from '@/components/Confetti'
 import { Badge } from '@/components/ui/Badge'
 import { getRewards, getRedemptions } from '@/lib/data/rewards'
-import { getUserTotalPoints } from '@/lib/data/points'
+import { getMemberTotalPoints } from '@/lib/data/points'
 import { getCurrentUserId } from '@/lib/data/auth'
-import { getMemberRole } from '@/lib/data/members'
+import { getLinkedMember, getMemberRole } from '@/lib/data/members'
 import { isSupabaseConfigured } from '@/lib/supabase/config'
 import { redeemRewardAction } from '@/app/actions/rewards'
 import type { Reward, RewardRedemption } from '@/lib/types'
@@ -36,10 +36,11 @@ export default function RewardsPage() {
     async function load() {
       const uid = await getCurrentUserId()
       setUserId(uid)
+      const linkedMember = await getLinkedMember(groupId, uid)
       const [rwds, redemps, pts, role] = await Promise.all([
         getRewards(groupId),
         getRedemptions(groupId),
-        getUserTotalPoints(groupId, uid),
+        linkedMember ? getMemberTotalPoints(groupId, linkedMember.id) : Promise.resolve(0),
         getMemberRole(groupId, uid),
       ])
       setRewards(rwds)

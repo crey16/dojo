@@ -16,9 +16,14 @@ export interface Group {
 export interface GroupMember {
   id: string
   group_id: string
-  user_id: string
+  user_id: string | null
+  display_name: string
   role: 'admin' | 'member'
-  joined_at: string
+  status: 'active' | 'inactive' | 'absent'
+  avatar_seed: string
+  created_by: string | null
+  created_at: string
+  updated_at: string
   profile?: Profile
 }
 
@@ -34,13 +39,13 @@ export interface PointCategory {
 export interface PointEvent {
   id: string
   group_id: string
-  user_id: string
+  member_id: string
   giver_id: string
   amount: number
   category_id: string | null
   reason: string
   created_at: string
-  profile?: Profile
+  member?: GroupMember
   giver_profile?: Profile
   category?: PointCategory
 }
@@ -91,7 +96,8 @@ export interface ChallengeSubmission {
 }
 
 export interface LeaderboardEntry {
-  user_id: string
+  member_id: string
+  user_id: string | null
   display_name: string
   total_points: number
   rank: number

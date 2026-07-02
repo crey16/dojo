@@ -9,8 +9,8 @@ import { ActivityItem } from '@/components/ActivityItem'
 import { LoadingState } from '@/components/ui/LoadingState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { getCurrentUser, getCurrentUserId } from '@/lib/data/auth'
-import { getRecentActivity, getUserTotalPoints, getLeaderboard } from '@/lib/data/points'
-import { getMemberRole } from '@/lib/data/members'
+import { getRecentActivity, getMemberTotalPoints, getLeaderboard } from '@/lib/data/points'
+import { getLinkedMember, getMemberRole } from '@/lib/data/members'
 import { getChallenges } from '@/lib/data/challenges'
 import type { Profile, PointEvent, Challenge } from '@/lib/types'
 import Link from 'next/link'
@@ -34,8 +34,9 @@ export default function DashboardPage() {
       setUser(currentUser)
 
       if (userId) {
+        const linkedMember = await getLinkedMember(groupId, userId)
         const [userPoints, leaderboard, recentActivity, activeChallenges, role] = await Promise.all([
-          getUserTotalPoints(groupId, userId),
+          linkedMember ? getMemberTotalPoints(groupId, linkedMember.id) : Promise.resolve(0),
           getLeaderboard(groupId, 'all-time'),
           getRecentActivity(groupId, 10),
           getChallenges(groupId),
@@ -128,6 +129,9 @@ export default function DashboardPage() {
         <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-4">
           <p className="font-black text-yellow-800 mb-2">👑 Admin Quick Access</p>
           <div className="flex gap-2 flex-wrap">
+            <Link href={`/groups/${groupId}/members`} className="bg-purple-600 text-white px-3 py-1.5 rounded-xl text-xs font-black border-b-2 border-purple-800 active:scale-95 transition-all">
+              Open Class Roster
+            </Link>
             <Link href={`/groups/${groupId}/admin`} className="bg-yellow-400 text-yellow-900 px-3 py-1.5 rounded-xl text-xs font-black border-b-2 border-yellow-600 active:scale-95 transition-all">
               Award Points
             </Link>

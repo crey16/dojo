@@ -22,7 +22,9 @@ export async function createGroupAction(name: string): Promise<{ group: Group | 
   await supabase.from('group_members').insert({
     group_id: data.id,
     user_id: user.id,
+    display_name: user.user_metadata.display_name ?? user.email?.split('@')[0] ?? 'Admin',
     role: 'admin',
+    created_by: user.id,
   })
 
   return { group: data, error: null }
@@ -43,7 +45,13 @@ export async function joinGroupAction(inviteCode: string): Promise<{ group: Grou
   // Plain insert: upsert's ON CONFLICT trips the select RLS policy for non-members
   const { error } = await supabase
     .from('group_members')
-    .insert({ group_id: group.id, user_id: user.id, role: 'member' })
+    .insert({
+      group_id: group.id,
+      user_id: user.id,
+      display_name: user.user_metadata.display_name ?? user.email?.split('@')[0] ?? 'Member',
+      role: 'member',
+      created_by: user.id,
+    })
 
   // 23505 unique violation = already a member, treat as success
   if (error && error.code !== '23505') return { group: null, error: error.message }

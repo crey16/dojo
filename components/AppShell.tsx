@@ -32,7 +32,7 @@ export function AppShell({ children, groupId, groupName, isAdmin, isDemoMode }: 
       {isDemoMode && <DemoModeBanner />}
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:fixed lg:inset-y-0 lg:w-64 lg:flex-col">
+      <div className="hidden lg:flex lg:fixed lg:inset-y-0 lg:w-56 lg:flex-col">
         <div className="flex flex-col flex-1 bg-purple-900 text-white overflow-y-auto">
           <div className="p-6 border-b border-purple-700">
             <Link href={`${base}/dashboard`} className="flex items-center gap-3">
@@ -69,7 +69,7 @@ export function AppShell({ children, groupId, groupName, isAdmin, isDemoMode }: 
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64 flex flex-col flex-1">
+      <div className="lg:pl-56 flex flex-col flex-1">
         {/* Mobile header */}
         <header className="lg:hidden sticky top-0 z-40 bg-purple-900 text-white px-4 py-3 flex items-center justify-between shadow-md">
           <Link href={`${base}/dashboard`} className="flex items-center gap-2">
@@ -79,7 +79,10 @@ export function AppShell({ children, groupId, groupName, isAdmin, isDemoMode }: 
           <Link href="/settings" className="text-purple-200 hover:text-white text-xl">⚙️</Link>
         </header>
 
-        <main className="flex-1 p-4 pb-24 lg:pb-8 lg:p-8 max-w-2xl mx-auto w-full">
+        <main className={cn(
+          'flex-1 p-4 pb-24 lg:pb-8 w-full',
+          pathname === `${base}/members` ? 'lg:p-0 max-w-none' : 'lg:p-8 max-w-2xl mx-auto'
+        )}>
           {children}
         </main>
       </div>

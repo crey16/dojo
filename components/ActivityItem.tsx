@@ -8,7 +8,7 @@ interface ActivityItemProps {
 
 export function ActivityItem({ event }: ActivityItemProps) {
   const positive = event.amount > 0
-  const name = event.profile?.display_name ?? 'Unknown'
+  const name = event.member?.display_name ?? 'Unknown'
 
   return (
     <div className="flex items-center gap-3 py-3 border-b border-purple-100 last:border-0">

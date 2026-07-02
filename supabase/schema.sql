@@ -25,9 +25,14 @@ create table if not exists public.groups (
 create table if not exists public.group_members (
   id uuid default uuid_generate_v4() primary key,
   group_id uuid references public.groups(id) on delete cascade not null,
-  user_id uuid references public.profiles(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete set null,
+  display_name text not null,
   role text not null default 'member' check (role in ('admin', 'member')),
-  joined_at timestamptz default now() not null,
+  status text not null default 'active' check (status in ('active', 'inactive', 'absent')),
+  avatar_seed text not null default uuid_generate_v4()::text,
+  created_by uuid references public.profiles(id) on delete set null,
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null,
   unique(group_id, user_id)
 );
 
@@ -46,7 +51,7 @@ create table if not exists public.point_categories (
 create table if not exists public.point_events (
   id uuid default uuid_generate_v4() primary key,
   group_id uuid references public.groups(id) on delete cascade not null,
-  user_id uuid references public.profiles(id) on delete cascade not null,
+  member_id uuid references public.group_members(id) on delete cascade not null,
   giver_id uuid references public.profiles(id) on delete cascade not null,
   amount integer not null,
   category_id uuid references public.point_categories(id) on delete set null,
@@ -117,3 +122,21 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+create or replace function public.protect_last_group_admin()
+returns trigger as $$
+begin
+  if old.role = 'admin' and (tg_op = 'DELETE' or new.role <> 'admin') and
+    (select count(*) from public.group_members where group_id = old.group_id and role = 'admin') <= 1 then
+    raise exception 'A group must keep at least one admin';
+  end if;
+  return case when tg_op = 'DELETE' then old else new end;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists protect_last_group_admin_trigger on public.group_members;
+create trigger protect_last_group_admin_trigger
+  before update of role or delete on public.group_members
+  for each row execute procedure public.protect_last_group_admin();
+
+notify pgrst, 'reload schema';

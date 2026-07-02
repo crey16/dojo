@@ -1,64 +1,284 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { MemberCard } from '@/components/MemberCard'
-import { PageHeader } from '@/components/ui/PageHeader'
+import { ClassToolbar } from '@/components/ClassToolbar'
+import { RosterMemberCard } from '@/components/RosterMemberCard'
+import { RosterModal } from '@/components/RosterModal'
+import { MonsterAvatar } from '@/components/MonsterAvatar'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
 import { LoadingState } from '@/components/ui/LoadingState'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { getGroupMembers } from '@/lib/data/members'
-import { getLeaderboard } from '@/lib/data/points'
-import type { GroupMember, LeaderboardEntry } from '@/lib/types'
+import { getCurrentUserId } from '@/lib/data/auth'
+import { getGroupMembers, getMemberRole } from '@/lib/data/members'
+import { getLeaderboard, getPointCategories } from '@/lib/data/points'
+import { isSupabaseConfigured } from '@/lib/supabase/config'
+import { MOCK_CATEGORIES, MOCK_MEMBERS, MOCK_POINT_EVENTS, MOCK_USER_ID } from '@/lib/mock-data'
+import { awardPointsAction } from '@/app/actions/points'
+import { createMemberAction, deleteMemberAction, updateMemberAction } from '@/app/actions/members'
+import type { GroupMember, LeaderboardEntry, PointCategory, PointEvent } from '@/lib/types'
+
+type Modal = 'add' | 'member' | 'multiple' | null
 
 export default function MembersPage() {
-  const params = useParams()
-  const groupId = params.groupId as string
-
+  const { groupId } = useParams<{ groupId: string }>()
+  const demo = !isSupabaseConfigured()
   const [members, setMembers] = useState<GroupMember[]>([])
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [demoEvents, setDemoEvents] = useState<PointEvent[]>([])
+  const [categories, setCategories] = useState<PointCategory[]>([])
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [modal, setModal] = useState<Modal>(null)
+  const [selectedMember, setSelectedMember] = useState<GroupMember | null>(null)
+  const [selecting, setSelecting] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [displayName, setDisplayName] = useState('')
+  const [status, setStatus] = useState<GroupMember['status']>('active')
+  const [amount, setAmount] = useState('5')
+  const [categoryId, setCategoryId] = useState('')
+  const [reason, setReason] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState('')
 
-  useEffect(() => {
-    async function load() {
-      const [m, lb] = await Promise.all([
-        getGroupMembers(groupId),
-        getLeaderboard(groupId, 'all-time'),
-      ])
-      setMembers(m)
-      setLeaderboard(lb)
-      setLoading(false)
-    }
-    load()
+  const load = useCallback(async () => {
+    const [nextMembers, nextLeaderboard, nextCategories, userId] = await Promise.all([
+      getGroupMembers(groupId), getLeaderboard(groupId, 'all-time'), getPointCategories(groupId), getCurrentUserId(),
+    ])
+    setMembers(nextMembers)
+    setLeaderboard(nextLeaderboard)
+    setCategories(nextCategories)
+    setIsAdmin((await getMemberRole(groupId, userId)) === 'admin')
+    setLoading(false)
   }, [groupId])
 
-  function getPointsForMember(userId: string) {
-    return leaderboard.find(e => e.user_id === userId)?.total_points
+  useEffect(() => {
+    if (demo) {
+      const storedMembers = window.localStorage.getItem('hcwk-demo-roster')
+      const storedEvents = window.localStorage.getItem('hcwk-demo-events')
+      setMembers(storedMembers ? JSON.parse(storedMembers) : MOCK_MEMBERS)
+      setDemoEvents(storedEvents ? JSON.parse(storedEvents) : MOCK_POINT_EVENTS)
+      setCategories(MOCK_CATEGORIES)
+      setIsAdmin(true)
+      setLoading(false)
+      return
+    }
+    load()
+  }, [demo, load])
+
+  useEffect(() => {
+    if (!demo || loading) return
+    window.localStorage.setItem('hcwk-demo-roster', JSON.stringify(members))
+    window.localStorage.setItem('hcwk-demo-events', JSON.stringify(demoEvents))
+  }, [demo, demoEvents, loading, members])
+
+  const points = useMemo(() => {
+    if (demo) {
+      return demoEvents.reduce<Record<string, number>>((totals, event) => {
+        totals[event.member_id] = (totals[event.member_id] ?? 0) + event.amount
+        return totals
+      }, {})
+    }
+    return leaderboard.reduce<Record<string, number>>((totals, entry) => {
+      totals[entry.member_id] = entry.total_points
+      return totals
+    }, {})
+  }, [demo, demoEvents, leaderboard])
+
+  function closeModal() {
+    setModal(null); setSelectedMember(null); setMessage(''); setDisplayName(''); setStatus('active')
+    setAmount('5'); setCategoryId(''); setReason('')
   }
 
-  function getRankForMember(userId: string) {
-    return leaderboard.find(e => e.user_id === userId)?.rank
+  function openMember(member: GroupMember) {
+    if (selecting) {
+      setSelectedIds(ids => ids.includes(member.id) ? ids.filter(id => id !== member.id) : [...ids, member.id])
+      return
+    }
+    setSelectedMember(member); setDisplayName(member.display_name); setStatus(member.status); setModal('member')
   }
 
-  if (loading) return <LoadingState />
+  async function addMember(event: React.FormEvent) {
+    event.preventDefault()
+    if (!displayName.trim()) return
+    setBusy(true)
+    if (demo) {
+      const now = new Date().toISOString()
+      setMembers(current => [...current, {
+        id: `demo-member-${Date.now()}`, group_id: groupId, user_id: null, display_name: displayName.trim(),
+        role: 'member', status: 'active', avatar_seed: `${displayName}-${Date.now()}`, created_by: MOCK_USER_ID,
+        created_at: now, updated_at: now,
+      }])
+      closeModal()
+    } else {
+      const result = await createMemberAction(groupId, displayName)
+      if (result.error) setMessage(result.error)
+      else { await load(); closeModal() }
+    }
+    setBusy(false)
+  }
+
+  async function award(memberIds: string[]) {
+    const parsed = Number.parseInt(amount)
+    if (!parsed || memberIds.length === 0) return
+    setBusy(true)
+    const category = categories.find(item => item.id === categoryId)
+    const awardReason = reason.trim() || category?.name || 'Points awarded'
+    if (demo) {
+      const newEvents = memberIds.map((memberId, index): PointEvent => ({
+        id: `demo-event-${Date.now()}-${index}`, group_id: groupId, member_id: memberId, giver_id: MOCK_USER_ID,
+        amount: parsed, category_id: categoryId || null, reason: awardReason, created_at: new Date().toISOString(),
+        member: members.find(member => member.id === memberId), category,
+      }))
+      setDemoEvents(current => [...newEvents, ...current])
+      setSelectedIds([]); setSelecting(false); closeModal()
+    } else {
+      const results = await Promise.all(memberIds.map(memberId => awardPointsAction(groupId, memberId, parsed, categoryId || null, awardReason)))
+      const error = results.find(result => result.error)?.error
+      if (error) setMessage(error)
+      else { await load(); setSelectedIds([]); setSelecting(false); closeModal() }
+    }
+    setBusy(false)
+  }
+
+  async function saveMember() {
+    if (!selectedMember || !displayName.trim()) return
+    setBusy(true)
+    if (demo) {
+      setMembers(current => current.map(member => member.id === selectedMember.id ? { ...member, display_name: displayName.trim(), status } : member))
+      closeModal()
+    } else {
+      const result = await updateMemberAction(selectedMember.id, { display_name: displayName.trim(), status })
+      if (result.error) setMessage(result.error)
+      else { await load(); closeModal() }
+    }
+    setBusy(false)
+  }
+
+  async function changeRole() {
+    if (!selectedMember?.user_id) return
+    const role = selectedMember.role === 'admin' ? 'member' : 'admin'
+    setBusy(true)
+    if (demo) {
+      setMembers(current => current.map(member => member.id === selectedMember.id ? { ...member, role } : member))
+      closeModal()
+    } else {
+      const result = await updateMemberAction(selectedMember.id, { role })
+      if (result.error) setMessage(result.error)
+      else { await load(); closeModal() }
+    }
+    setBusy(false)
+  }
+
+  async function removeMember() {
+    if (!selectedMember || !window.confirm(`Remove ${selectedMember.display_name} from the roster?`)) return
+    setBusy(true)
+    if (demo) {
+      setMembers(current => current.filter(member => member.id !== selectedMember.id))
+      setDemoEvents(current => current.filter(event => event.member_id !== selectedMember.id))
+      closeModal()
+    } else {
+      const result = await deleteMemberAction(selectedMember.id)
+      if (result.error) setMessage(result.error)
+      else { await load(); closeModal() }
+    }
+    setBusy(false)
+  }
+
+  function chooseCategory(id: string) {
+    setCategoryId(id)
+    const category = categories.find(item => item.id === id)
+    if (category) setAmount(String(category.default_points))
+  }
+
+  if (loading) return <LoadingState message="Opening class roster..." />
+
+  const awardForm = (memberIds: string[]) => (
+    <div className="flex flex-col gap-3">
+      <Select label="Point category" value={categoryId} onChange={event => chooseCategory(event.target.value)}>
+        <option value="">Custom points</option>
+        {categories.map(category => <option key={category.id} value={category.id}>{category.emoji} {category.name} ({category.default_points > 0 ? '+' : ''}{category.default_points})</option>)}
+      </Select>
+      <Input label="Points (negative removes points)" type="number" value={amount} onChange={event => setAmount(event.target.value)} />
+      <Input label="Reason" value={reason} onChange={event => setReason(event.target.value)} placeholder="What happened?" />
+      {message && <p className="text-sm font-bold text-red-600">{message}</p>}
+      <Button onClick={() => award(memberIds)} loading={busy} className="w-full">
+        {Number(amount) < 0 ? 'Remove points' : `Award ${memberIds.length > 1 ? `${memberIds.length} members` : 'points'}`}
+      </Button>
+    </div>
+  )
 
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Members" emoji="👥" subtitle={`${members.length} dojo warriors`} />
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f4f4f3]">
+      <ClassToolbar
+        isAdmin={isAdmin}
+        selecting={selecting}
+        onAdd={() => { setDisplayName(''); setModal('add') }}
+        onToggleSelect={() => { setSelecting(value => !value); setSelectedIds([]) }}
+        onReset={() => window.alert('Reset bubbles is a session-display feature planned for the next pass. Point history is unchanged.')}
+      />
 
-      {members.length === 0 ? (
-        <EmptyState emoji="👤" title="No members yet!" description="Invite friends with your group code." />
-      ) : (
-        <div className="flex flex-col gap-2">
-          {members.map(member => (
-            <MemberCard
-              key={member.id}
-              member={member}
-              groupId={groupId}
-              points={getPointsForMember(member.user_id)}
-              rank={getRankForMember(member.user_id)}
-            />
+      <section className="px-4 sm:px-7 py-6">
+        <div className="flex items-end justify-between gap-4 mb-8">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] font-black text-purple-500">HCWK class</p>
+            <h1 className="text-2xl sm:text-3xl font-black text-gray-800 mt-1">Class Roster</h1>
+            <p className="text-sm text-gray-500">{members.filter(member => member.status === 'active').length} active · {members.length} total</p>
+          </div>
+          {selecting && (
+            <Button disabled={selectedIds.length === 0} onClick={() => setModal('multiple')} size="sm">
+              Award selected ({selectedIds.length})
+            </Button>
+          )}
+        </div>
+
+        <div className="roster-grid">
+          {members.map((member, index) => (
+            <RosterMemberCard key={member.id} member={member} index={index} points={points[member.id] ?? 0}
+              selected={selectedIds.includes(member.id)} onClick={() => openMember(member)} />
           ))}
         </div>
+      </section>
+
+      {modal === 'add' && (
+        <RosterModal title="Add a roster member" subtitle="They can earn points without creating an account." onClose={closeModal}>
+          <form onSubmit={addMember} className="flex flex-col gap-3">
+            <Input label="Display name" value={displayName} onChange={event => setDisplayName(event.target.value)} autoFocus required />
+            {message && <p className="text-sm font-bold text-red-600">{message}</p>}
+            <Button type="submit" loading={busy}>Add to roster</Button>
+          </form>
+        </RosterModal>
+      )}
+
+      {modal === 'multiple' && (
+        <RosterModal title="Award multiple members" subtitle={`${selectedIds.length} roster cards selected`} onClose={closeModal}>
+          {awardForm(selectedIds)}
+        </RosterModal>
+      )}
+
+      {modal === 'member' && selectedMember && (
+        <RosterModal title={selectedMember.display_name} subtitle={`${selectedMember.user_id ? 'Linked account' : 'Unclaimed roster profile'} · ${points[selectedMember.id] ?? 0} points`} onClose={closeModal}>
+          <div className="flex justify-center mb-4"><MonsterAvatar name={selectedMember.avatar_seed} size="xl" mood="happy" /></div>
+          {isAdmin ? (
+            <div className="flex flex-col gap-5">
+              {awardForm([selectedMember.id])}
+              <div className="border-t border-purple-100 pt-4 flex flex-col gap-3">
+                <Input label="Display name" value={displayName} onChange={event => setDisplayName(event.target.value)} />
+                <Select label="Attendance / status" value={status} onChange={event => setStatus(event.target.value as GroupMember['status'])}>
+                  <option value="active">Active</option><option value="absent">Absent</option><option value="inactive">Inactive</option>
+                </Select>
+                <Button variant="secondary" onClick={saveMember} loading={busy}>Save member details</Button>
+                {selectedMember.user_id && (
+                  <Button variant="secondary" onClick={changeRole} loading={busy}>
+                    {selectedMember.role === 'admin' ? 'Demote to member' : 'Promote to admin'}
+                  </Button>
+                )}
+                <Button variant="danger" onClick={removeMember} loading={busy}>Remove from roster</Button>
+              </div>
+            </div>
+          ) : <p className="text-center text-sm text-gray-500">Only admins can manage roster members and points.</p>}
+        </RosterModal>
       )}
     </div>
   )

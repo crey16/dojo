@@ -11,10 +11,10 @@ interface MemberCardProps {
 }
 
 export function MemberCard({ member, groupId, points, rank }: MemberCardProps) {
-  const name = member.profile?.display_name ?? 'Unknown'
+  const name = member.display_name
 
   return (
-    <Link href={`/groups/${groupId}/members/${member.user_id}`}>
+    <Link href={`/groups/${groupId}/members/${member.id}`}>
       <div className="bg-white rounded-2xl border-2 border-purple-100 p-3 flex items-center gap-3 hover:border-purple-300 transition-all active:scale-95">
         <MonsterAvatar name={name} size="sm" />
         <div className="flex-1 min-w-0">

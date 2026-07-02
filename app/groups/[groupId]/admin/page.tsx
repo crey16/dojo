@@ -248,8 +248,8 @@ export default function AdminPage() {
             >
               <option value="">Select a member...</option>
               {members.map(m => (
-                <option key={m.user_id} value={m.user_id}>
-                  {m.profile?.display_name ?? m.user_id}
+                <option key={m.id} value={m.id}>
+                  {m.display_name}
                 </option>
               ))}
             </Select>
@@ -425,10 +425,10 @@ export default function AdminPage() {
             <h3 className="font-black text-purple-900 mb-2">Members ({members.length})</h3>
             {members.map(m => (
               <div key={m.id} className="bg-white rounded-xl border border-purple-100 p-3 mb-2 flex items-center gap-2">
-                <MonsterAvatar name={m.profile?.display_name ?? 'Unknown'} size="xs" />
+                <MonsterAvatar name={m.avatar_seed || m.display_name} size="xs" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm truncate">{m.profile?.display_name}</p>
-                  <p className="text-xs text-gray-400">{m.profile?.email}</p>
+                  <p className="font-bold text-sm truncate">{m.display_name}</p>
+                  <p className="text-xs text-gray-400">{m.user_id ? m.profile?.email : 'Unclaimed roster member'}</p>
                 </div>
                 <Badge variant={m.role === 'admin' ? 'purple' : 'gray'}>{m.role}</Badge>
               </div>
@@ -447,10 +447,10 @@ export default function AdminPage() {
             ) : (
               activity.map(event => (
                 <div key={event.id} className="flex items-center gap-3 py-3 border-b border-purple-50 last:border-0">
-                  <MonsterAvatar name={event.profile?.display_name ?? 'Unknown'} size="xs" />
+                  <MonsterAvatar name={event.member?.display_name ?? 'Unknown'} size="xs" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-gray-800 truncate">
-                      {event.profile?.display_name} · {event.category?.emoji} {event.reason}
+                      {event.member?.display_name} · {event.category?.emoji} {event.reason}
                     </p>
                     <p className="text-xs text-gray-400">{formatRelativeTime(event.created_at)}</p>
                   </div>

@@ -10,8 +10,8 @@ import { StatCard } from '@/components/StatCard'
 import { Badge } from '@/components/ui/Badge'
 import { LoadingState } from '@/components/ui/LoadingState'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { getGroupMembers, getMemberRole } from '@/lib/data/members'
-import { getUserPointEvents, getUserTotalPoints, getLeaderboard } from '@/lib/data/points'
+import { getGroupMembers } from '@/lib/data/members'
+import { getMemberPointEvents, getMemberTotalPoints, getLeaderboard } from '@/lib/data/points'
 import type { GroupMember, PointEvent } from '@/lib/types'
 
 export default function MemberProfilePage() {
@@ -29,15 +29,15 @@ export default function MemberProfilePage() {
     async function load() {
       const [members, pointEvents, total, leaderboard] = await Promise.all([
         getGroupMembers(groupId),
-        getUserPointEvents(groupId, memberId),
-        getUserTotalPoints(groupId, memberId),
+        getMemberPointEvents(groupId, memberId),
+        getMemberTotalPoints(groupId, memberId),
         getLeaderboard(groupId, 'all-time'),
       ])
-      const found = members.find(m => m.user_id === memberId)
+      const found = members.find(m => m.id === memberId)
       setMember(found ?? null)
       setEvents(pointEvents)
       setTotalPoints(total)
-      const entry = leaderboard.find(e => e.user_id === memberId)
+      const entry = leaderboard.find(e => e.member_id === memberId)
       setRank(entry?.rank ?? 0)
       setLoading(false)
     }
@@ -51,7 +51,7 @@ export default function MemberProfilePage() {
     .filter(e => new Date(e.created_at) >= weekStart)
     .reduce((sum, e) => sum + e.amount, 0)
 
-  const name = member?.profile?.display_name ?? 'Unknown'
+  const name = member?.display_name ?? 'Unknown'
   const mood = totalPoints > 10 ? 'happy' : totalPoints < 0 ? 'guilty' : 'neutral'
 
   if (loading) return <LoadingState />

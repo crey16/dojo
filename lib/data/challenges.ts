@@ -69,9 +69,16 @@ export async function updateSubmissionStatus(
     .update({ status })
     .eq('id', submissionId)
   if (!error && status === 'approved') {
+    const { data: member } = await supabase
+      .from('group_members')
+      .select('id')
+      .eq('group_id', groupId)
+      .eq('user_id', userId)
+      .single()
+    if (!member) return { error: 'Linked roster member not found' }
     await supabase.from('point_events').insert({
       group_id: groupId,
-      user_id: userId,
+      member_id: member.id,
       giver_id: userId,
       amount: points,
       category_id: null,

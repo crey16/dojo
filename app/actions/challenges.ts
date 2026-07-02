@@ -51,14 +51,22 @@ export async function updateSubmissionStatusAction(
     .eq('id', submissionId)
 
   if (!error && status === 'approved') {
-    await supabase.from('point_events').insert({
-      group_id: groupId,
-      user_id: submittedUserId,
-      giver_id: user.id,
-      amount: points,
-      category_id: null,
-      reason: 'Challenge approved',
-    })
+    const { data: member } = await supabase
+      .from('group_members')
+      .select('id')
+      .eq('group_id', groupId)
+      .eq('user_id', submittedUserId)
+      .single()
+    if (member) {
+      await supabase.from('point_events').insert({
+        group_id: groupId,
+        member_id: member.id,
+        giver_id: user.id,
+        amount: points,
+        category_id: null,
+        reason: 'Challenge approved',
+      })
+    }
   }
   return { error: error?.message ?? null }
 }

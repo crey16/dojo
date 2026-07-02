@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function awardPointsAction(
   groupId: string,
-  targetUserId: string,
+  targetMemberId: string,
   amount: number,
   categoryId: string | null,
   reason: string
@@ -16,7 +16,7 @@ export async function awardPointsAction(
 
   const { error } = await supabase.from('point_events').insert({
     group_id: groupId,
-    user_id: targetUserId,
+    member_id: targetMemberId,
     giver_id: user.id,
     amount,
     category_id: categoryId,

@@ -24,6 +24,13 @@
 --   ('YOUR-GROUP-UUID', 'Custom Nickname', 'Choose your own nickname in the group for a week.', 10, true),
 --   ('YOUR-GROUP-UUID', 'Skip a Challenge', 'Opt out of any one challenge without penalty.', 25, true);
 
+-- Example unclaimed roster members (replace both UUIDs):
+-- INSERT INTO public.group_members (group_id, display_name, role, status, created_by) VALUES
+--   ('YOUR-GROUP-UUID', 'Kaison', 'member', 'active', 'YOUR-ADMIN-USER-UUID'),
+--   ('YOUR-GROUP-UUID', 'Alex', 'member', 'active', 'YOUR-ADMIN-USER-UUID'),
+--   ('YOUR-GROUP-UUID', 'Jayden', 'member', 'active', 'YOUR-ADMIN-USER-UUID'),
+--   ('YOUR-GROUP-UUID', 'Tyler', 'member', 'absent', 'YOUR-ADMIN-USER-UUID');
+
 -- How to set up your first group:
 -- 1. Create your account via the signup page
 -- 2. Go to /groups/create and create "HCWK"

@@ -42,7 +42,7 @@ export async function createGroup(name: string, userId: string): Promise<{ group
     .select()
     .single()
   if (error) return { group: null, error: error.message }
-  await supabase.from('group_members').insert({ group_id: data.id, user_id: userId, role: 'admin' })
+  await supabase.from('group_members').insert({ group_id: data.id, user_id: userId, display_name: 'Admin', role: 'admin', created_by: userId })
   return { group: data, error: null }
 }
 
@@ -59,7 +59,7 @@ export async function joinGroup(inviteCode: string, userId: string): Promise<{ g
   if (gError || !group) return { group: null, error: 'Invalid invite code' }
   const { error } = await supabase
     .from('group_members')
-    .upsert({ group_id: group.id, user_id: userId, role: 'member' })
+    .upsert({ group_id: group.id, user_id: userId, display_name: 'Member', role: 'member', created_by: userId })
   if (error) return { group: null, error: error.message }
   return { group, error: null }
 }

@@ -59,7 +59,7 @@ export default function LeaderboardPage() {
             <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-3xl p-4 flex flex-col gap-2 mb-2">
               <p className="text-xs font-black text-yellow-700 uppercase tracking-wide">🥇 Top Players</p>
               {top3.map(entry => (
-                <LeaderboardCard key={entry.user_id} entry={entry} isCurrentUser={entry.user_id === userId} />
+                <LeaderboardCard key={entry.member_id} entry={entry} isCurrentUser={entry.user_id === userId} />
               ))}
             </div>
           )}
@@ -68,7 +68,7 @@ export default function LeaderboardPage() {
           {rest.length > 0 && (
             <div className="flex flex-col gap-2">
               {rest.map(entry => (
-                <LeaderboardCard key={entry.user_id} entry={entry} isCurrentUser={entry.user_id === userId} />
+                <LeaderboardCard key={entry.member_id} entry={entry} isCurrentUser={entry.user_id === userId} />
               ))}
             </div>
           )}

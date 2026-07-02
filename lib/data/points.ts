@@ -8,7 +8,7 @@ import {
   MOCK_CATEGORIES,
   MOCK_LEADERBOARD_ALL_TIME,
   MOCK_LEADERBOARD_WEEKLY,
-  getMockUserPoints,
+  getMockMemberPoints,
 } from '../mock-data'
 import { getWeekStart } from '../utils'
 
@@ -28,35 +28,35 @@ export async function getRecentActivity(groupId: string, limit = 20): Promise<Po
   const supabase = createClient()
   const { data } = await supabase
     .from('point_events')
-    .select('*, profile:profiles!point_events_user_id_fkey(*), giver_profile:profiles!point_events_giver_id_fkey(*), category:point_categories(*)')
+    .select('*, member:group_members!point_events_member_id_fkey(*), giver_profile:profiles!point_events_giver_id_fkey(*), category:point_categories(*)')
     .eq('group_id', groupId)
     .order('created_at', { ascending: false })
     .limit(limit)
   return data ?? []
 }
 
-export async function getUserPointEvents(groupId: string, userId: string): Promise<PointEvent[]> {
+export async function getMemberPointEvents(groupId: string, memberId: string): Promise<PointEvent[]> {
   if (!isSupabaseConfigured()) {
-    return MOCK_POINT_EVENTS.filter(e => e.user_id === userId)
+    return MOCK_POINT_EVENTS.filter(e => e.member_id === memberId)
   }
   const supabase = createClient()
   const { data } = await supabase
     .from('point_events')
-    .select('*, profile:profiles!point_events_user_id_fkey(*), giver_profile:profiles!point_events_giver_id_fkey(*), category:point_categories(*)')
+    .select('*, member:group_members!point_events_member_id_fkey(*), giver_profile:profiles!point_events_giver_id_fkey(*), category:point_categories(*)')
     .eq('group_id', groupId)
-    .eq('user_id', userId)
+    .eq('member_id', memberId)
     .order('created_at', { ascending: false })
   return data ?? []
 }
 
-export async function getUserTotalPoints(groupId: string, userId: string): Promise<number> {
-  if (!isSupabaseConfigured()) return getMockUserPoints(userId)
+export async function getMemberTotalPoints(groupId: string, memberId: string): Promise<number> {
+  if (!isSupabaseConfigured()) return getMockMemberPoints(memberId)
   const supabase = createClient()
   const { data } = await supabase
     .from('point_events')
     .select('amount')
     .eq('group_id', groupId)
-    .eq('user_id', userId)
+    .eq('member_id', memberId)
   return (data ?? []).reduce((sum: number, e: { amount: number }) => sum + e.amount, 0)
 }
 
@@ -67,33 +67,39 @@ export async function getLeaderboard(groupId: string, period: 'all-time' | 'week
   const supabase = createClient()
   let query = supabase
     .from('point_events')
-    .select('user_id, amount, profiles!point_events_user_id_fkey(display_name)')
+    .select('member_id, amount, group_members!point_events_member_id_fkey(display_name, user_id)')
     .eq('group_id', groupId)
 
   if (period === 'weekly') {
     query = query.gte('created_at', getWeekStart().toISOString())
   }
 
-  const { data } = await query
+  const [{ data }, { data: members }] = await Promise.all([
+    query,
+    supabase.from('group_members').select('id, display_name, user_id').eq('group_id', groupId),
+  ])
   if (!data) return []
 
-  const totals: Record<string, { display_name: string; total: number }> = {}
-  for (const row of data as unknown as Array<{ user_id: string; amount: number; profiles: { display_name: string } | null }>) {
-    if (!totals[row.user_id]) {
-      totals[row.user_id] = { display_name: row.profiles?.display_name ?? 'Unknown', total: 0 }
+  const totals: Record<string, { display_name: string; user_id: string | null; total: number }> = {}
+  for (const member of members ?? []) {
+    totals[member.id] = { display_name: member.display_name, user_id: member.user_id, total: 0 }
+  }
+  for (const row of data as unknown as Array<{ member_id: string; amount: number; group_members: { display_name: string; user_id: string | null } | null }>) {
+    if (!totals[row.member_id]) {
+      totals[row.member_id] = { display_name: row.group_members?.display_name ?? 'Unknown', user_id: row.group_members?.user_id ?? null, total: 0 }
     }
-    totals[row.user_id].total += row.amount
+    totals[row.member_id].total += row.amount
   }
 
   return Object.entries(totals)
-    .map(([user_id, { display_name, total }]) => ({ user_id, display_name, total_points: total, rank: 0 }))
+    .map(([member_id, { display_name, user_id, total }]) => ({ member_id, user_id, display_name, total_points: total, rank: 0 }))
     .sort((a, b) => b.total_points - a.total_points)
     .map((e, i) => ({ ...e, rank: i + 1 }))
 }
 
 export async function awardPoints(
   groupId: string,
-  userId: string,
+  memberId: string,
   giverId: string,
   amount: number,
   categoryId: string | null,
@@ -105,7 +111,7 @@ export async function awardPoints(
   const supabase = createClient()
   const { error } = await supabase.from('point_events').insert({
     group_id: groupId,
-    user_id: userId,
+    member_id: memberId,
     giver_id: giverId,
     amount,
     category_id: categoryId,

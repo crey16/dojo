@@ -30,6 +30,25 @@ returns boolean as $$
   );
 $$ language sql security definer stable;
 
+create or replace function public.is_roster_member_in_group(p_group_id uuid, p_member_id uuid)
+returns boolean as $$
+  select exists (
+    select 1 from public.group_members where group_id = p_group_id and id = p_member_id
+  );
+$$ language sql security definer stable;
+
+-- Linked members may only change avatar_seed themselves.
+create or replace function public.is_limited_self_member_update(
+  p_member_id uuid, p_group_id uuid, p_user_id uuid, p_display_name text, p_role text, p_status text
+)
+returns boolean as $$
+  select exists (
+    select 1 from public.group_members
+    where id = p_member_id and group_id = p_group_id and user_id = p_user_id
+      and display_name = p_display_name and role = p_role and status = p_status
+  );
+$$ language sql security definer stable;
+
 -- Profiles
 create policy "Users can view any profile" on public.profiles for select using (true);
 create policy "Users can update own profile" on public.profiles for update using (auth.uid() = id);
@@ -61,6 +80,14 @@ create policy "Members can view group members" on public.group_members for selec
   using (public.is_group_member(group_id, auth.uid()));
 create policy "Authenticated users can join groups" on public.group_members for insert
   with check (auth.uid() = user_id);
+create policy "Admins can create roster members" on public.group_members for insert
+  with check (public.is_group_admin(group_id, auth.uid()));
+create policy "Admins can update members" on public.group_members for update
+  using (public.is_group_admin(group_id, auth.uid()))
+  with check (public.is_group_admin(group_id, auth.uid()));
+create policy "Linked members can update own roster profile" on public.group_members for update
+  using (auth.uid() = user_id)
+  with check (public.is_limited_self_member_update(id, group_id, auth.uid(), display_name, role, status));
 create policy "Admins can manage members" on public.group_members for delete
   using (public.is_group_admin(group_id, auth.uid()));
 
@@ -74,7 +101,10 @@ create policy "Admins can manage categories" on public.point_categories for all
 create policy "Members can view point events" on public.point_events for select
   using (public.is_group_member(group_id, auth.uid()));
 create policy "Admins can create point events" on public.point_events for insert
-  with check (public.is_group_admin(group_id, auth.uid()));
+  with check (
+    public.is_group_admin(group_id, auth.uid())
+    and public.is_roster_member_in_group(group_id, member_id)
+  );
 
 -- Rewards
 create policy "Members can view rewards" on public.rewards for select

@@ -14,6 +14,7 @@ export async function getGroupMembers(groupId: string): Promise<GroupMember[]> {
     .from('group_members')
     .select('*, profile:profiles(*)')
     .eq('group_id', groupId)
+    .order('created_at', { ascending: true })
   return (data ?? []) as GroupMember[]
 }
 
@@ -42,4 +43,18 @@ export async function removeMember(groupId: string, userId: string): Promise<{ e
     .eq('group_id', groupId)
     .eq('user_id', userId)
   return { error: error?.message ?? null }
+}
+
+export async function getLinkedMember(groupId: string, userId: string): Promise<GroupMember | null> {
+  if (!isSupabaseConfigured()) {
+    return MOCK_MEMBERS.find(member => member.user_id === userId) ?? null
+  }
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('group_members')
+    .select('*, profile:profiles(*)')
+    .eq('group_id', groupId)
+    .eq('user_id', userId)
+    .single()
+  return data as GroupMember | null
 }
