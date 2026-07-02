@@ -35,6 +35,26 @@ export async function updateMemberAction(
   return { error: memberActionError(error?.message) }
 }
 
+// Kept separate from updateMemberAction: the "Linked members can update own
+// roster profile" RLS policy only allows a self-update that leaves
+// display_name/role/status untouched, so this must not send other columns.
+export async function updateMemberAvatarAction(memberId: string, avatarSeed: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { data, error } = await supabase
+    .from('group_members')
+    .update({ avatar_seed: avatarSeed })
+    .eq('id', memberId)
+    .select('id')
+
+  if (error) return { error: memberActionError(error.message) }
+  // RLS silently updates nothing when the row is not the caller's own profile
+  if (!data || data.length === 0) return { error: 'You can only change your own avatar.' }
+  return { error: null }
+}
+
 export async function deleteMemberAction(memberId: string) {
   const supabase = await createClient()
   const { error } = await supabase.from('group_members').delete().eq('id', memberId)

@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { generateInviteCode } from '@/lib/utils'
-import type { Group } from '@/lib/types'
+import type { ClaimableMember, Group } from '@/lib/types'
 
 export async function createGroupAction(name: string): Promise<{ group: Group | null; error: string | null }> {
   const supabase = await createClient()
@@ -56,4 +56,41 @@ export async function joinGroupAction(inviteCode: string): Promise<{ group: Grou
   // 23505 unique violation = already a member, treat as success
   if (error && error.code !== '23505') return { group: null, error: error.message }
   return { group, error: null }
+}
+
+export async function getJoinPreviewAction(
+  inviteCode: string
+): Promise<{ group: Group | null; claimable: ClaimableMember[]; error: string | null }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { group: null, claimable: [], error: 'Not authenticated' }
+
+  const [{ data: groups, error: gError }, { data: claimable }] = await Promise.all([
+    supabase.rpc('get_group_by_invite_code', { p_invite_code: inviteCode }),
+    supabase.rpc('get_claimable_members', { p_invite_code: inviteCode }),
+  ])
+
+  const group = groups?.[0]
+  if (gError || !group) return { group: null, claimable: [], error: 'Invalid invite code' }
+
+  return { group, claimable: claimable ?? [], error: null }
+}
+
+export async function claimMemberAction(
+  inviteCode: string,
+  memberId: string
+): Promise<{ error: string | null }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase.rpc('claim_roster_member', {
+    p_invite_code: inviteCode,
+    p_member_id: memberId,
+  })
+
+  // Raised exceptions from the RPC already carry a friendly message
+  return { error: error?.message ?? null }
 }

@@ -19,7 +19,7 @@ import { getLeaderboard, getMemberPointEvents, getPointCategories } from '@/lib/
 import { isSupabaseConfigured } from '@/lib/supabase/config'
 import { MOCK_CATEGORIES, MOCK_MEMBERS, MOCK_POINT_EVENTS, MOCK_USER_ID } from '@/lib/mock-data'
 import { awardPointsAction, undoPointEventAction } from '@/app/actions/points'
-import { createMemberAction, deleteMemberAction, updateMemberAction } from '@/app/actions/members'
+import { createMemberAction, deleteMemberAction, updateMemberAction, updateMemberAvatarAction } from '@/app/actions/members'
 import type { GroupMember, LeaderboardEntry, PointCategory, PointEvent } from '@/lib/types'
 
 type Modal = 'add' | 'member' | 'multiple' | null
@@ -32,6 +32,7 @@ export default function MembersPage() {
   const [demoEvents, setDemoEvents] = useState<PointEvent[]>([])
   const [categories, setCategories] = useState<PointCategory[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState('')
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState<Modal>(null)
   const [selectedMember, setSelectedMember] = useState<GroupMember | null>(null)
@@ -53,6 +54,7 @@ export default function MembersPage() {
     setMembers(nextMembers)
     setLeaderboard(nextLeaderboard)
     setCategories(nextCategories)
+    setCurrentUserId(userId)
     setIsAdmin((await getMemberRole(groupId, userId)) === 'admin')
     setLoading(false)
   }, [groupId])
@@ -64,6 +66,7 @@ export default function MembersPage() {
       setMembers(storedMembers ? JSON.parse(storedMembers) : MOCK_MEMBERS)
       setDemoEvents(storedEvents ? JSON.parse(storedEvents) : MOCK_POINT_EVENTS)
       setCategories(MOCK_CATEGORIES)
+      setCurrentUserId(MOCK_USER_ID)
       setIsAdmin(true)
       setLoading(false)
       return
@@ -223,6 +226,24 @@ export default function MembersPage() {
     setBusy(false)
   }
 
+  async function shuffleAvatar() {
+    if (!selectedMember) return
+    const seed = crypto.randomUUID()
+    if (demo) {
+      setMembers(current => current.map(member => member.id === selectedMember.id ? { ...member, avatar_seed: seed } : member))
+      setSelectedMember({ ...selectedMember, avatar_seed: seed })
+      return
+    }
+    setBusy(true)
+    const result = await updateMemberAvatarAction(selectedMember.id, seed)
+    if (result.error) setMessage(result.error)
+    else {
+      setSelectedMember({ ...selectedMember, avatar_seed: seed })
+      await load()
+    }
+    setBusy(false)
+  }
+
   function chooseCategory(id: string) {
     setCategoryId(id)
     const category = categories.find(item => item.id === id)
@@ -305,7 +326,12 @@ export default function MembersPage() {
 
       {modal === 'member' && selectedMember && (
         <RosterModal title={selectedMember.display_name} subtitle={`${selectedMember.user_id ? 'Linked account' : 'Unclaimed roster profile'} · ${points[selectedMember.id] ?? 0} points`} onClose={closeModal}>
-          <div className="flex justify-center mb-4"><MonsterAvatar name={selectedMember.avatar_seed} size="xl" mood="happy" /></div>
+          <div className="flex flex-col items-center gap-2 mb-4">
+            <MonsterAvatar name={selectedMember.avatar_seed} size="xl" mood="happy" />
+            {selectedMember.user_id === currentUserId && (
+              <Button variant="ghost" size="sm" onClick={shuffleAvatar} loading={busy}>🎲 Shuffle avatar</Button>
+            )}
+          </div>
           {isAdmin ? (
             <div className="flex flex-col gap-5">
               {awardForm([selectedMember.id])}
@@ -334,6 +360,18 @@ export default function MembersPage() {
                   </div>
                 )}
               </div>
+            </div>
+          ) : selectedMember.user_id === currentUserId ? (
+            <div>
+              <p className="text-xs uppercase tracking-widest font-black text-purple-500 mb-1">Your point history</p>
+              {memberEvents.length === 0 ? (
+                <p className="text-sm text-gray-400 py-2">No points yet.</p>
+              ) : (
+                <div className="max-h-48 overflow-y-auto">
+                  {memberEvents.slice(0, 10).map(event => <ActivityItem key={event.id} event={event} />)}
+                </div>
+              )}
+              {message && <p className="text-sm font-bold text-red-600 mt-2">{message}</p>}
             </div>
           ) : <p className="text-center text-sm text-gray-500">Only admins can manage roster members and points.</p>}
           <div className="mt-4 text-center">

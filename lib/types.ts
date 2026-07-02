@@ -27,6 +27,13 @@ export interface GroupMember {
   profile?: Profile
 }
 
+// Unclaimed roster member as exposed to a joiner (via get_claimable_members)
+export interface ClaimableMember {
+  id: string
+  display_name: string
+  avatar_seed: string
+}
+
 export interface PointCategory {
   id: string
   group_id: string
