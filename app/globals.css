@@ -119,3 +119,23 @@ body {
 .roster-selected-check {
   @apply absolute top-2 left-2 bg-purple-600 text-white w-6 h-6 rounded-full flex items-center justify-center font-black;
 }
+
+.roster-role-badge {
+  @apply inline-flex items-center gap-0.5 mt-0.5 bg-yellow-100 text-yellow-800 border border-yellow-300 rounded-full px-1.5 text-[9px] font-black;
+}
+
+.roster-quick {
+  @apply absolute bottom-1.5 right-1.5 flex gap-1 z-10;
+}
+
+.roster-quick-btn {
+  @apply w-6 h-6 rounded-full text-white text-sm font-black flex items-center justify-center shadow-sm cursor-pointer transition-transform active:scale-90 leading-none;
+}
+
+.roster-quick-plus {
+  @apply bg-green-500 hover:bg-green-600;
+}
+
+.roster-quick-minus {
+  @apply bg-red-400 hover:bg-red-500;
+}

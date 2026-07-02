@@ -45,7 +45,7 @@ export default function DashboardPage() {
 
         setPoints(userPoints)
         setTotalMembers(leaderboard.length)
-        const entry = leaderboard.find(e => e.user_id === userId)
+        const entry = linkedMember ? leaderboard.find(e => e.member_id === linkedMember.id) : undefined
         setRank(entry?.rank ?? 0)
         setActivity(recentActivity)
         setChallenges(activeChallenges.filter(c => c.active))

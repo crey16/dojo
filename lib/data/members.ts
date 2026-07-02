@@ -32,19 +32,6 @@ export async function getMemberRole(groupId: string, userId: string): Promise<'a
   return data?.role ?? null
 }
 
-export async function removeMember(groupId: string, userId: string): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured()) {
-    return { error: null }
-  }
-  const supabase = createClient()
-  const { error } = await supabase
-    .from('group_members')
-    .delete()
-    .eq('group_id', groupId)
-    .eq('user_id', userId)
-  return { error: error?.message ?? null }
-}
-
 export async function getLinkedMember(groupId: string, userId: string): Promise<GroupMember | null> {
   if (!isSupabaseConfigured()) {
     return MOCK_MEMBERS.find(member => member.user_id === userId) ?? null

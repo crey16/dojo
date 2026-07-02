@@ -19,7 +19,7 @@ import { getChallenges, getSubmissions } from '@/lib/data/challenges'
 import { getCurrentUserId } from '@/lib/data/auth'
 import { getGroup } from '@/lib/data/groups'
 import { isSupabaseConfigured } from '@/lib/supabase/config'
-import { awardPointsAction } from '@/app/actions/points'
+import { awardPointsAction, undoPointEventAction } from '@/app/actions/points'
 import { createRewardAction, updateRedemptionStatusAction } from '@/app/actions/rewards'
 import { createChallengeAction, updateSubmissionStatusAction } from '@/app/actions/challenges'
 import { formatRelativeTime } from '@/lib/utils'
@@ -131,6 +131,12 @@ export default function AdminPage() {
       setAwardMsg(`❌ Error: ${error}`)
     }
     setAwardLoading(false)
+  }
+
+  async function handleUndoEvent(eventId: string) {
+    const { error } = await undoPointEventAction(eventId)
+    if (error) setAwardMsg(`❌ Error: ${error}`)
+    else setActivity(await getRecentActivity(groupId, 30))
   }
 
   async function handleCreateReward(e: React.FormEvent) {
@@ -457,6 +463,16 @@ export default function AdminPage() {
                   <span className={`text-sm font-black ${event.amount >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                     {event.amount >= 0 ? '+' : ''}{event.amount}
                   </span>
+                  {isSupabaseConfigured() && (
+                    <button
+                      type="button"
+                      onClick={() => handleUndoEvent(event.id)}
+                      title="Undo this point event"
+                      className="text-xs font-bold text-purple-500 hover:text-purple-700 hover:bg-purple-50 rounded-lg px-2 py-1 cursor-pointer"
+                    >
+                      ↩ Undo
+                    </button>
+                  )}
                 </div>
               ))
             )}

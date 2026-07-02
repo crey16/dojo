@@ -4,9 +4,10 @@ import type { PointEvent } from '@/lib/types'
 
 interface ActivityItemProps {
   event: PointEvent
+  onUndo?: () => void
 }
 
-export function ActivityItem({ event }: ActivityItemProps) {
+export function ActivityItem({ event, onUndo }: ActivityItemProps) {
   const positive = event.amount > 0
   const name = event.member?.display_name ?? 'Unknown'
 
@@ -27,6 +28,16 @@ export function ActivityItem({ event }: ActivityItemProps) {
         </span>
         <span className="text-xs text-gray-400">{formatRelativeTime(event.created_at)}</span>
       </div>
+      {onUndo && (
+        <button
+          type="button"
+          onClick={onUndo}
+          title="Undo this point event"
+          className="text-xs font-bold text-purple-500 hover:text-purple-700 hover:bg-purple-50 rounded-lg px-2 py-1 cursor-pointer"
+        >
+          ↩ Undo
+        </button>
+      )}
     </div>
   )
 }

@@ -105,6 +105,8 @@ create policy "Admins can create point events" on public.point_events for insert
     public.is_group_admin(group_id, auth.uid())
     and public.is_roster_member_in_group(group_id, member_id)
   );
+create policy "Admins can delete point events" on public.point_events for delete
+  using (public.is_group_admin(group_id, auth.uid()));
 
 -- Rewards
 create policy "Members can view rewards" on public.rewards for select

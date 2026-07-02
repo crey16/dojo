@@ -2,20 +2,23 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
+import Link from 'next/link'
 import { ClassToolbar } from '@/components/ClassToolbar'
 import { RosterMemberCard } from '@/components/RosterMemberCard'
 import { RosterModal } from '@/components/RosterModal'
 import { MonsterAvatar } from '@/components/MonsterAvatar'
+import { ActivityItem } from '@/components/ActivityItem'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { LoadingState } from '@/components/ui/LoadingState'
 import { getCurrentUserId } from '@/lib/data/auth'
 import { getGroupMembers, getMemberRole } from '@/lib/data/members'
-import { getLeaderboard, getPointCategories } from '@/lib/data/points'
+import { getLeaderboard, getMemberPointEvents, getPointCategories } from '@/lib/data/points'
 import { isSupabaseConfigured } from '@/lib/supabase/config'
 import { MOCK_CATEGORIES, MOCK_MEMBERS, MOCK_POINT_EVENTS, MOCK_USER_ID } from '@/lib/mock-data'
-import { awardPointsAction } from '@/app/actions/points'
+import { awardPointsAction, undoPointEventAction } from '@/app/actions/points'
 import { createMemberAction, deleteMemberAction, updateMemberAction } from '@/app/actions/members'
 import type { GroupMember, LeaderboardEntry, PointCategory, PointEvent } from '@/lib/types'
 
@@ -32,6 +35,7 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState<Modal>(null)
   const [selectedMember, setSelectedMember] = useState<GroupMember | null>(null)
+  const [memberEvents, setMemberEvents] = useState<PointEvent[]>([])
   const [selecting, setSelecting] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [displayName, setDisplayName] = useState('')
@@ -87,16 +91,19 @@ export default function MembersPage() {
   }, [demo, demoEvents, leaderboard])
 
   function closeModal() {
-    setModal(null); setSelectedMember(null); setMessage(''); setDisplayName(''); setStatus('active')
+    setModal(null); setSelectedMember(null); setMemberEvents([]); setMessage(''); setDisplayName(''); setStatus('active')
     setAmount('5'); setCategoryId(''); setReason('')
   }
 
-  function openMember(member: GroupMember) {
+  async function openMember(member: GroupMember) {
     if (selecting) {
       setSelectedIds(ids => ids.includes(member.id) ? ids.filter(id => id !== member.id) : [...ids, member.id])
       return
     }
     setSelectedMember(member); setDisplayName(member.display_name); setStatus(member.status); setModal('member')
+    setMemberEvents(demo
+      ? demoEvents.filter(event => event.member_id === member.id)
+      : await getMemberPointEvents(groupId, member.id))
   }
 
   async function addMember(event: React.FormEvent) {
@@ -186,6 +193,36 @@ export default function MembersPage() {
     setBusy(false)
   }
 
+  async function quickAward(member: GroupMember, quickAmount: number) {
+    const quickReason = quickAmount > 0 ? 'Quick +1' : 'Quick −1'
+    if (demo) {
+      setDemoEvents(current => [{
+        id: `demo-event-${Date.now()}`, group_id: groupId, member_id: member.id, giver_id: MOCK_USER_ID,
+        amount: quickAmount, category_id: null, reason: quickReason, created_at: new Date().toISOString(), member,
+      }, ...current])
+      return
+    }
+    const result = await awardPointsAction(groupId, member.id, quickAmount, null, quickReason)
+    if (result.error) setMessage(result.error)
+    else await load()
+  }
+
+  async function undoEvent(event: PointEvent) {
+    if (demo) {
+      setDemoEvents(current => current.filter(item => item.id !== event.id))
+      setMemberEvents(current => current.filter(item => item.id !== event.id))
+      return
+    }
+    setBusy(true)
+    const result = await undoPointEventAction(event.id)
+    if (result.error) setMessage(result.error)
+    else {
+      setMemberEvents(current => current.filter(item => item.id !== event.id))
+      await load()
+    }
+    setBusy(false)
+  }
+
   function chooseCategory(id: string) {
     setCategoryId(id)
     const category = categories.find(item => item.id === id)
@@ -233,12 +270,21 @@ export default function MembersPage() {
           )}
         </div>
 
-        <div className="roster-grid">
-          {members.map((member, index) => (
-            <RosterMemberCard key={member.id} member={member} index={index} points={points[member.id] ?? 0}
-              selected={selectedIds.includes(member.id)} onClick={() => openMember(member)} />
-          ))}
-        </div>
+        {members.length === 0 ? (
+          <div className="flex flex-col items-center">
+            <EmptyState emoji="🧑‍🏫" title="No members yet"
+              description="Add your first roster member — no account needed. They can claim their profile later." />
+            {isAdmin && <Button onClick={() => { setDisplayName(''); setModal('add') }}>+ Add your first member</Button>}
+          </div>
+        ) : (
+          <div className="roster-grid">
+            {members.map((member, index) => (
+              <RosterMemberCard key={member.id} member={member} index={index} points={points[member.id] ?? 0}
+                selected={selectedIds.includes(member.id)} onClick={() => openMember(member)}
+                onQuickAward={isAdmin && !selecting ? amount => quickAward(member, amount) : undefined} />
+            ))}
+          </div>
+        )}
       </section>
 
       {modal === 'add' && (
@@ -276,8 +322,25 @@ export default function MembersPage() {
                 )}
                 <Button variant="danger" onClick={removeMember} loading={busy}>Remove from roster</Button>
               </div>
+              <div className="border-t border-purple-100 pt-4">
+                <p className="text-xs uppercase tracking-widest font-black text-purple-500 mb-1">Point history</p>
+                {memberEvents.length === 0 ? (
+                  <p className="text-sm text-gray-400 py-2">No points yet.</p>
+                ) : (
+                  <div className="max-h-48 overflow-y-auto">
+                    {memberEvents.slice(0, 10).map(event => (
+                      <ActivityItem key={event.id} event={event} onUndo={() => undoEvent(event)} />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           ) : <p className="text-center text-sm text-gray-500">Only admins can manage roster members and points.</p>}
+          <div className="mt-4 text-center">
+            <Link href={`/groups/${groupId}/members/${selectedMember.id}`} className="text-xs font-bold text-purple-500 hover:underline">
+              View full profile →
+            </Link>
+          </div>
         </RosterModal>
       )}
     </div>
