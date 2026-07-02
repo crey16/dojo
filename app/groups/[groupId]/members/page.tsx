@@ -16,6 +16,7 @@ import { LoadingState } from '@/components/ui/LoadingState'
 import { getCurrentUserId } from '@/lib/data/auth'
 import { getGroupMembers, getMemberRole } from '@/lib/data/members'
 import { getLeaderboard, getMemberPointEvents, getPointCategories } from '@/lib/data/points'
+import { computeTotals } from '@/lib/points-math'
 import { isSupabaseConfigured } from '@/lib/supabase/config'
 import { MOCK_CATEGORIES, MOCK_MEMBERS, MOCK_POINT_EVENTS, MOCK_USER_ID } from '@/lib/mock-data'
 import { awardPointsAction, undoPointEventAction } from '@/app/actions/points'
@@ -81,12 +82,7 @@ export default function MembersPage() {
   }, [demo, demoEvents, loading, members])
 
   const points = useMemo(() => {
-    if (demo) {
-      return demoEvents.reduce<Record<string, number>>((totals, event) => {
-        totals[event.member_id] = (totals[event.member_id] ?? 0) + event.amount
-        return totals
-      }, {})
-    }
+    if (demo) return computeTotals(demoEvents)
     return leaderboard.reduce<Record<string, number>>((totals, entry) => {
       totals[entry.member_id] = entry.total_points
       return totals

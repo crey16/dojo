@@ -11,6 +11,7 @@ import {
   getMockMemberPoints,
 } from '../mock-data'
 import { getWeekStart } from '../utils'
+import { computeLeaderboard } from '../points-math'
 
 export async function getPointCategories(groupId: string): Promise<PointCategory[]> {
   if (!isSupabaseConfigured()) return MOCK_CATEGORIES
@@ -67,7 +68,7 @@ export async function getLeaderboard(groupId: string, period: 'all-time' | 'week
   const supabase = createClient()
   let query = supabase
     .from('point_events')
-    .select('member_id, amount, group_members!point_events_member_id_fkey(display_name, user_id)')
+    .select('member_id, amount')
     .eq('group_id', groupId)
 
   if (period === 'weekly') {
@@ -80,21 +81,9 @@ export async function getLeaderboard(groupId: string, period: 'all-time' | 'week
   ])
   if (!data) return []
 
-  const totals: Record<string, { display_name: string; user_id: string | null; total: number }> = {}
-  for (const member of members ?? []) {
-    totals[member.id] = { display_name: member.display_name, user_id: member.user_id, total: 0 }
-  }
-  for (const row of data as unknown as Array<{ member_id: string; amount: number; group_members: { display_name: string; user_id: string | null } | null }>) {
-    if (!totals[row.member_id]) {
-      totals[row.member_id] = { display_name: row.group_members?.display_name ?? 'Unknown', user_id: row.group_members?.user_id ?? null, total: 0 }
-    }
-    totals[row.member_id].total += row.amount
-  }
-
-  return Object.entries(totals)
-    .map(([member_id, { display_name, user_id, total }]) => ({ member_id, user_id, display_name, total_points: total, rank: 0 }))
-    .sort((a, b) => b.total_points - a.total_points)
-    .map((e, i) => ({ ...e, rank: i + 1 }))
+  // Every event's member_id references a group_members row (FK, cascade delete),
+  // so the members list covers all events
+  return computeLeaderboard(members ?? [], data as Array<{ member_id: string; amount: number }>)
 }
 
 export async function awardPoints(
