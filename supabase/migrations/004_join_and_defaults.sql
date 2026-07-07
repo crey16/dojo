@@ -5,6 +5,8 @@
 -- group whose id they knew. Joining now goes through security-definer RPCs
 -- that validate the invite code.
 drop policy if exists "Authenticated users can join groups" on public.group_members;
+-- Legacy name from early ad-hoc setup queries; same open-join hole
+drop policy if exists "Users can join groups as themselves" on public.group_members;
 
 -- Join a group by invite code. Validates the code server-side and inserts the
 -- membership row atomically.

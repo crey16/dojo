@@ -220,6 +220,7 @@ begin
 end $$;
 
 -- ── 12. Challenge flow: duplicate submission blocked, approval idempotent ──
+reset role; -- back to postgres for seeding
 insert into public.challenges (id, group_id, title, points, active, created_by)
 values ('00000000-0000-0000-0000-000000000031', '00000000-0000-0000-0000-000000000001', 'RLS Challenge', 15, true, '00000000-0000-0000-0000-00000000aaaa');
 
@@ -260,6 +261,7 @@ begin
 end $$;
 
 -- ── 13. Reward flow: balance enforced, one pending, approval deducts once ──
+reset role; -- back to postgres for seeding
 insert into public.rewards (id, group_id, title, cost, active)
 values ('00000000-0000-0000-0000-000000000041', '00000000-0000-0000-0000-000000000001', 'RLS Reward', 10, true);
 
