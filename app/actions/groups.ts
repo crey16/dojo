@@ -10,24 +10,14 @@ export async function createGroupAction(name: string): Promise<{ group: Group | 
 
   if (!user) return { group: null, error: 'Not authenticated' }
 
-  const invite_code = generateInviteCode()
-  const { data, error } = await supabase
-    .from('groups')
-    .insert({ name, invite_code, created_by: user.id })
-    .select()
-    .single()
-
-  if (error) return { group: null, error: error.message }
-
-  await supabase.from('group_members').insert({
-    group_id: data.id,
-    user_id: user.id,
-    display_name: user.user_metadata.display_name ?? user.email?.split('@')[0] ?? 'Admin',
-    role: 'admin',
-    created_by: user.id,
+  // Atomic RPC: group + admin membership + default categories, or nothing
+  const { data, error } = await supabase.rpc('create_group_with_admin', {
+    p_name: name,
+    p_invite_code: generateInviteCode(),
   })
 
-  return { group: data, error: null }
+  if (error) return { group: null, error: error.message }
+  return { group: data as Group, error: null }
 }
 
 export async function joinGroupAction(inviteCode: string): Promise<{ group: Group | null; error: string | null }> {
@@ -36,26 +26,14 @@ export async function joinGroupAction(inviteCode: string): Promise<{ group: Grou
 
   if (!user) return { group: null, error: 'Not authenticated' }
 
-  const { data: groups, error: gError } = await supabase
-    .rpc('get_group_by_invite_code', { p_invite_code: inviteCode })
+  // RPC validates the invite code server-side; direct membership inserts are
+  // blocked by RLS. Already-a-member is a no-op success.
+  const { data, error } = await supabase.rpc('join_group_with_code', {
+    p_invite_code: inviteCode,
+  })
 
-  const group = groups?.[0]
-  if (gError || !group) return { group: null, error: 'Invalid invite code' }
-
-  // Plain insert: upsert's ON CONFLICT trips the select RLS policy for non-members
-  const { error } = await supabase
-    .from('group_members')
-    .insert({
-      group_id: group.id,
-      user_id: user.id,
-      display_name: user.user_metadata.display_name ?? user.email?.split('@')[0] ?? 'Member',
-      role: 'member',
-      created_by: user.id,
-    })
-
-  // 23505 unique violation = already a member, treat as success
-  if (error && error.code !== '23505') return { group: null, error: error.message }
-  return { group, error: null }
+  if (error) return { group: null, error: error.message }
+  return { group: data as Group, error: null }
 }
 
 export async function getJoinPreviewAction(

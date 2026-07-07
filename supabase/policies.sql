@@ -1,5 +1,8 @@
 -- HCWK Dojo Row Level Security Policies
--- Run AFTER schema.sql
+-- Run AFTER schema.sql.
+-- Fresh installs must ALSO run supabase/migrations/004_join_and_defaults.sql
+-- and 005_submissions_redemptions.sql (RPCs + unique indexes the app relies on).
+-- Migrations 000-003 are only for databases created before the roster model.
 
 -- Enable RLS on all tables
 alter table public.profiles enable row level security;
@@ -135,8 +138,9 @@ grant execute on function public.claim_roster_member(text, uuid) to authenticate
 -- Group members
 create policy "Members can view group members" on public.group_members for select
   using (public.is_group_member(group_id, auth.uid()));
-create policy "Authenticated users can join groups" on public.group_members for insert
-  with check (auth.uid() = user_id);
+-- Joining a group happens only through the join_group_with_code /
+-- claim_roster_member RPCs (see migrations/004_join_and_defaults.sql);
+-- there is intentionally no self-insert policy.
 create policy "Admins can create roster members" on public.group_members for insert
   with check (public.is_group_admin(group_id, auth.uid()));
 create policy "Admins can update members" on public.group_members for update

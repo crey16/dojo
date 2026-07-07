@@ -30,36 +30,27 @@ export async function getUserGroups(userId: string): Promise<Group[]> {
   }).filter(Boolean) ?? []) as Group[]
 }
 
-export async function createGroup(name: string, userId: string): Promise<{ group: Group | null; error: string | null }> {
+export async function createGroup(name: string, _userId: string): Promise<{ group: Group | null; error: string | null }> {
   if (!isSupabaseConfigured()) {
     return { group: { ...MOCK_GROUP, name, id: `group-${Date.now()}` }, error: null }
   }
   const supabase = createClient()
-  const invite_code = generateInviteCode()
-  const { data, error } = await supabase
-    .from('groups')
-    .insert({ name, invite_code, created_by: userId })
-    .select()
-    .single()
+  const { data, error } = await supabase.rpc('create_group_with_admin', {
+    p_name: name,
+    p_invite_code: generateInviteCode(),
+  })
   if (error) return { group: null, error: error.message }
-  await supabase.from('group_members').insert({ group_id: data.id, user_id: userId, display_name: 'Admin', role: 'admin', created_by: userId })
-  return { group: data, error: null }
+  return { group: data as Group, error: null }
 }
 
-export async function joinGroup(inviteCode: string, userId: string): Promise<{ group: Group | null; error: string | null }> {
+export async function joinGroup(inviteCode: string, _userId: string): Promise<{ group: Group | null; error: string | null }> {
   if (!isSupabaseConfigured()) {
     return { group: MOCK_GROUP, error: null }
   }
   const supabase = createClient()
-  const { data: group, error: gError } = await supabase
-    .from('groups')
-    .select('*')
-    .eq('invite_code', inviteCode.toUpperCase())
-    .single()
-  if (gError || !group) return { group: null, error: 'Invalid invite code' }
-  const { error } = await supabase
-    .from('group_members')
-    .upsert({ group_id: group.id, user_id: userId, display_name: 'Member', role: 'member', created_by: userId })
+  const { data, error } = await supabase.rpc('join_group_with_code', {
+    p_invite_code: inviteCode,
+  })
   if (error) return { group: null, error: error.message }
-  return { group, error: null }
+  return { group: data as Group, error: null }
 }
