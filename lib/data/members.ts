@@ -12,7 +12,7 @@ export async function getGroupMembers(groupId: string): Promise<GroupMember[]> {
   const supabase = createClient()
   const { data } = await supabase
     .from('group_members')
-    .select('*, profile:profiles(*)')
+    .select('*, profile:profiles!group_members_user_id_fkey(*)')
     .eq('group_id', groupId)
     .order('created_at', { ascending: true })
   return (data ?? []) as GroupMember[]
@@ -39,7 +39,7 @@ export async function getLinkedMember(groupId: string, userId: string): Promise<
   const supabase = createClient()
   const { data } = await supabase
     .from('group_members')
-    .select('*, profile:profiles(*)')
+    .select('*, profile:profiles!group_members_user_id_fkey(*)')
     .eq('group_id', groupId)
     .eq('user_id', userId)
     .single()

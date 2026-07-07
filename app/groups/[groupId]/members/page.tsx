@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { LoadingState } from '@/components/ui/LoadingState'
+import { Toast } from '@/components/ui/Toast'
 import { getCurrentUserId } from '@/lib/data/auth'
 import { getGroupMembers, getMemberRole } from '@/lib/data/members'
 import { getLeaderboard, getMemberPointEvents, getPointCategories } from '@/lib/data/points'
@@ -47,6 +48,7 @@ export default function MembersPage() {
   const [reason, setReason] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+  const [toast, setToast] = useState('')
 
   const load = useCallback(async () => {
     const [nextMembers, nextLeaderboard, nextCategories, userId] = await Promise.all([
@@ -117,10 +119,11 @@ export default function MembersPage() {
         created_at: now, updated_at: now,
       }])
       closeModal()
+      setToast(`${displayName.trim()} added to the roster`)
     } else {
       const result = await createMemberAction(groupId, displayName)
       if (result.error) setMessage(result.error)
-      else { await load(); closeModal() }
+      else { await load(); closeModal(); setToast(`${displayName.trim()} added to the roster`) }
     }
     setBusy(false)
   }
@@ -139,11 +142,15 @@ export default function MembersPage() {
       }))
       setDemoEvents(current => [...newEvents, ...current])
       setSelectedIds([]); setSelecting(false); closeModal()
+      setToast(`${parsed > 0 ? '+' : '−'}${Math.abs(parsed)} to ${memberIds.length > 1 ? `${memberIds.length} members` : 'member'}`)
     } else {
       const results = await Promise.all(memberIds.map(memberId => awardPointsAction(groupId, memberId, parsed, categoryId || null, awardReason)))
       const error = results.find(result => result.error)?.error
       if (error) setMessage(error)
-      else { await load(); setSelectedIds([]); setSelecting(false); closeModal() }
+      else {
+        await load(); setSelectedIds([]); setSelecting(false); closeModal()
+        setToast(`${parsed > 0 ? '+' : '−'}${Math.abs(parsed)} to ${memberIds.length > 1 ? `${memberIds.length} members` : 'member'}`)
+      }
     }
     setBusy(false)
   }
@@ -154,10 +161,11 @@ export default function MembersPage() {
     if (demo) {
       setMembers(current => current.map(member => member.id === selectedMember.id ? { ...member, display_name: displayName.trim(), status } : member))
       closeModal()
+      setToast('Member details saved')
     } else {
       const result = await updateMemberAction(selectedMember.id, { display_name: displayName.trim(), status })
       if (result.error) setMessage(result.error)
-      else { await load(); closeModal() }
+      else { await load(); closeModal(); setToast('Member details saved') }
     }
     setBusy(false)
   }
@@ -184,10 +192,11 @@ export default function MembersPage() {
       setMembers(current => current.filter(member => member.id !== selectedMember.id))
       setDemoEvents(current => current.filter(event => event.member_id !== selectedMember.id))
       closeModal()
+      setToast('Member removed')
     } else {
       const result = await deleteMemberAction(selectedMember.id)
       if (result.error) setMessage(result.error)
-      else { await load(); closeModal() }
+      else { await load(); closeModal(); setToast('Member removed') }
     }
     setBusy(false)
   }
@@ -303,6 +312,7 @@ export default function MembersPage() {
 
   return (
     <div className="flex flex-col">
+      <Toast message={toast} onDismiss={() => setToast('')} />
       <div className="flex items-baseline justify-between gap-4">
         <div>
           <h1 className="font-display font-bold text-[28px] leading-tight text-ink">The Squad</h1>
