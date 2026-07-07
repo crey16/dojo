@@ -6,7 +6,7 @@ export function LoadingState({ message = 'Loading...' }: LoadingStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 gap-4">
       <div className="flex gap-2">
-        {['bg-purple-400', 'bg-pink-400', 'bg-yellow-400'].map((color, i) => (
+        {['bg-violet-500', 'bg-violet-300', 'bg-violet-200'].map((color, i) => (
           <div
             key={i}
             className={`w-3 h-3 rounded-full ${color} animate-bounce`}
@@ -14,7 +14,7 @@ export function LoadingState({ message = 'Loading...' }: LoadingStateProps) {
           />
         ))}
       </div>
-      <p className="text-sm font-bold text-purple-600">{message}</p>
+      <p className="text-sm font-semibold text-gray-500">{message}</p>
     </div>
   )
 }

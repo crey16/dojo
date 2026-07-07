@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
 import { Badge } from '@/components/ui/Badge'
+import { Icon } from '@/components/ui/Icon'
 import { MonsterAvatar } from '@/components/MonsterAvatar'
 import { Confetti } from '@/components/Confetti'
 import { LoadingState } from '@/components/ui/LoadingState'
@@ -292,13 +293,13 @@ export default function AdminPage() {
       <PageHeader title="Admin Panel" emoji="👑" subtitle="You run this dojo." />
 
       {/* Tab bar */}
-      <div className="flex gap-1 bg-purple-100 p-1 rounded-2xl overflow-x-auto">
+      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl overflow-x-auto">
         {tabs.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={`flex-shrink-0 flex items-center gap-1 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
-              tab === t.id ? 'bg-white text-purple-700 shadow-sm' : 'text-purple-500'
+              tab === t.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             {t.emoji} {t.label}
@@ -426,7 +427,7 @@ export default function AdminPage() {
           )}
 
           <div>
-            <h3 className="font-black text-purple-900 mb-2">All Rewards ({rewards.length})</h3>
+            <h3 className="font-bold text-gray-900 mb-2">All Rewards ({rewards.length})</h3>
             {rewardMsg && (
               <div className="bg-red-50 border-2 border-red-200 rounded-xl p-2 mb-2 text-xs font-bold text-red-700">{rewardMsg}</div>
             )}
@@ -453,12 +454,12 @@ export default function AdminPage() {
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <Badge variant={r.active ? 'green' : 'gray'}>{r.active ? 'Active' : 'Inactive'}</Badge>
-                      <Button variant="ghost" size="sm" onClick={() => { setConfirmDeleteReward(''); setEditReward(r) }}>✏️</Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleToggleReward(r)}>{r.active ? '💤' : '▶️'}</Button>
+                      <Button variant="ghost" size="sm" onClick={() => { setConfirmDeleteReward(''); setEditReward(r) }}><Icon name="edit" size={16} /></Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleToggleReward(r)}>{r.active ? <Icon name="pause" size={16} /> : <Icon name="play" size={16} />}</Button>
                       {confirmDeleteReward === r.id ? (
                         <Button variant="danger" size="sm" onClick={() => handleDeleteReward(r.id)}>Really delete?</Button>
                       ) : (
-                        <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteReward(r.id)}>🗑️</Button>
+                        <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteReward(r.id)}><Icon name="trash" size={16} /></Button>
                       )}
                     </div>
                   </div>
@@ -512,7 +513,7 @@ export default function AdminPage() {
           )}
 
           <div>
-            <h3 className="font-black text-purple-900 mb-2">All Challenges ({challenges.length})</h3>
+            <h3 className="font-bold text-gray-900 mb-2">All Challenges ({challenges.length})</h3>
             {challengeMsg && (
               <div className="bg-red-50 border-2 border-red-200 rounded-xl p-2 mb-2 text-xs font-bold text-red-700">{challengeMsg}</div>
             )}
@@ -540,12 +541,12 @@ export default function AdminPage() {
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <Badge variant={c.active ? 'green' : 'gray'}>{c.active ? 'Active' : 'Inactive'}</Badge>
-                      <Button variant="ghost" size="sm" onClick={() => { setConfirmDeleteChallenge(''); setEditChallenge(c) }}>✏️</Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleToggleChallenge(c)}>{c.active ? '💤' : '▶️'}</Button>
+                      <Button variant="ghost" size="sm" onClick={() => { setConfirmDeleteChallenge(''); setEditChallenge(c) }}><Icon name="edit" size={16} /></Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleToggleChallenge(c)}>{c.active ? <Icon name="pause" size={16} /> : <Icon name="play" size={16} />}</Button>
                       {confirmDeleteChallenge === c.id ? (
                         <Button variant="danger" size="sm" onClick={() => handleDeleteChallenge(c.id)}>Really delete?</Button>
                       ) : (
-                        <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteChallenge(c.id)}>🗑️</Button>
+                        <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteChallenge(c.id)}><Icon name="trash" size={16} /></Button>
                       )}
                     </div>
                   </div>
@@ -568,7 +569,7 @@ export default function AdminPage() {
           )}
 
           <div>
-            <h3 className="font-black text-purple-900 mb-2">Members ({members.length})</h3>
+            <h3 className="font-bold text-gray-900 mb-2">Members ({members.length})</h3>
             {members.map(m => (
               <div key={m.id} className="bg-white rounded-xl border border-purple-100 p-3 mb-2 flex items-center gap-2">
                 <MonsterAvatar name={m.avatar_seed || m.display_name} size="xs" />
@@ -586,7 +587,7 @@ export default function AdminPage() {
       {/* ACTIVITY TAB */}
       {tab === 'activity' && (
         <div>
-          <h3 className="font-black text-purple-900 mb-3">Recent Activity</h3>
+          <h3 className="font-bold text-gray-900 mb-3">Recent Activity</h3>
           <div className="bg-white rounded-2xl border-2 border-purple-100 px-4">
             {activity.length === 0 ? (
               <div className="py-8 text-center text-gray-400 text-sm">No activity yet</div>

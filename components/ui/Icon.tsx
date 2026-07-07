@@ -1,0 +1,49 @@
+import { cn } from '@/lib/utils'
+
+const PATHS: Record<string, React.ReactNode> = {
+  home: <path d="M3 10.5 12 3l9 7.5M5 9.5V21h5v-6h4v6h5V9.5" />,
+  trophy: <path d="M8 21h8m-4-4v4m-6-17h12v5a6 6 0 0 1-12 0V4Zm12 2h2a2 2 0 0 1-2 4M6 6H4a2 2 0 0 0 2 4" />,
+  target: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1" /></>,
+  gift: <path d="M20 12v9H4v-9m-1-5h18v5H3V7Zm9-3v17M12 7H8.5a2.25 2.25 0 1 1 0-4.5C11 2.5 12 7 12 7Zm0 0h3.5a2.25 2.25 0 1 0 0-4.5C13 2.5 12 7 12 7Z" />,
+  users: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.7a3.5 3.5 0 0 1 0 6.6m2 8.7h3.5a6.5 6.5 0 0 0-4.5-6.2" /></>,
+  crown: <path d="m3 7 4.5 4L12 4l4.5 7L21 7l-1.5 12h-15L3 7Z" />,
+  settings: <><circle cx="12" cy="12" r="3.5" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.1 2.1m10 10 2.1 2.1m0-14.2-2.1 2.1m-10 10-2.1 2.1" /></>,
+  edit: <path d="M17 3.5 20.5 7 8.5 19H5v-3.5l12-12ZM14.5 6l3.5 3.5" />,
+  trash: <path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3" />,
+  pause: <path d="M8 5v14m8-14v14" />,
+  play: <path d="M7 4.5 19 12 7 19.5v-15Z" />,
+  undo: <path d="M4 10h11a5 5 0 0 1 0 10h-4M4 10l4-4m-4 4 4 4" />,
+  check: <path d="m4.5 12.5 5 5 10-11" />,
+  x: <path d="m5 5 14 14m0-14L5 19" />,
+  key: <><circle cx="8" cy="15" r="4.5" /><path d="M11.5 11.5 20 3m-3 3 3 3" /></>,
+  star: <path d="m12 3 2.7 5.8 6.3.8-4.6 4.3 1.2 6.1L12 17l-5.6 3 1.2-6.1L3 9.6l6.3-.8L12 3Z" />,
+  plus: <path d="M12 5v14M5 12h14" />,
+  minus: <path d="M5 12h14" />,
+}
+
+export type IconName = keyof typeof PATHS
+
+interface IconProps {
+  name: IconName
+  size?: number
+  className?: string
+}
+
+export function Icon({ name, size = 20, className }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={cn('flex-shrink-0', className)}
+    >
+      {PATHS[name]}
+    </svg>
+  )
+}

@@ -12,15 +12,15 @@ export function Textarea({ label, error, className, id, ...props }: TextareaProp
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={id} className="text-sm font-bold text-purple-800">
+        <label htmlFor={id} className="text-sm font-semibold text-gray-700">
           {label}
         </label>
       )}
       <textarea
         id={id}
         className={cn(
-          'w-full px-4 py-3 rounded-2xl border-2 border-purple-200 bg-white text-gray-800 font-medium',
-          'focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200',
+          'w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900',
+          'focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100',
           'placeholder:text-gray-400 transition-colors resize-none',
           error && 'border-red-400',
           className

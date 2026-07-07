@@ -8,17 +8,17 @@ interface BadgeProps {
 
 export function Badge({ children, variant = 'purple', className }: BadgeProps) {
   const variants = {
-    purple: 'bg-purple-100 text-purple-700 border-purple-300',
-    green: 'bg-green-100 text-green-700 border-green-300',
-    red: 'bg-red-100 text-red-700 border-red-300',
-    yellow: 'bg-yellow-100 text-yellow-700 border-yellow-300',
-    blue: 'bg-blue-100 text-blue-700 border-blue-300',
-    gray: 'bg-gray-100 text-gray-600 border-gray-300',
+    purple: 'bg-violet-50 text-violet-700 ring-violet-200',
+    green: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    red: 'bg-red-50 text-red-700 ring-red-200',
+    yellow: 'bg-amber-50 text-amber-700 ring-amber-200',
+    blue: 'bg-sky-50 text-sky-700 ring-sky-200',
+    gray: 'bg-gray-100 text-gray-600 ring-gray-200',
   }
 
   return (
     <span className={cn(
-      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border',
+      'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold ring-1 ring-inset',
       variants[variant],
       className
     )}>

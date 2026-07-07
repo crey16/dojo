@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { Icon, type IconName } from './ui/Icon'
 
 interface MobileNavProps {
   groupId: string
@@ -13,17 +14,17 @@ export function MobileNav({ groupId, isAdmin }: MobileNavProps) {
   const pathname = usePathname()
   const base = `/groups/${groupId}`
 
-  const links = [
-    { href: `${base}/dashboard`, label: 'Home', emoji: '🏠' },
-    { href: `${base}/leaderboard`, label: 'Board', emoji: '🏆' },
-    { href: `${base}/challenges`, label: 'Quests', emoji: '⚔️' },
-    { href: `${base}/rewards`, label: 'Rewards', emoji: '🎁' },
-    { href: `${base}/members`, label: 'Crew', emoji: '👥' },
-    ...(isAdmin ? [{ href: `${base}/admin`, label: 'Admin', emoji: '👑' }] : []),
+  const links: { href: string; label: string; icon: IconName }[] = [
+    { href: `${base}/dashboard`, label: 'Home', icon: 'home' },
+    { href: `${base}/leaderboard`, label: 'Board', icon: 'trophy' },
+    { href: `${base}/challenges`, label: 'Quests', icon: 'target' },
+    { href: `${base}/rewards`, label: 'Rewards', icon: 'gift' },
+    { href: `${base}/members`, label: 'Crew', icon: 'users' },
+    ...(isAdmin ? [{ href: `${base}/admin`, label: 'Admin', icon: 'crown' as IconName }] : []),
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t-2 border-purple-100 safe-area-pb lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 safe-area-pb lg:hidden">
       <div className="flex">
         {links.map(link => {
           const active = pathname === link.href
@@ -32,16 +33,12 @@ export function MobileNav({ groupId, isAdmin }: MobileNavProps) {
               key={link.href}
               href={link.href}
               className={cn(
-                'flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-all',
-                active ? 'text-purple-700' : 'text-gray-400 hover:text-purple-500'
+                'flex-1 flex flex-col items-center justify-center py-2 gap-1 transition-colors',
+                active ? 'text-violet-600' : 'text-gray-400 hover:text-gray-600'
               )}
             >
-              <span className={cn('text-xl leading-none', active && 'scale-110 transition-transform')}>
-                {link.emoji}
-              </span>
-              <span className={cn('text-[10px] font-bold', active ? 'text-purple-700' : 'text-gray-400')}>
-                {link.label}
-              </span>
+              <Icon name={link.icon} size={22} className={cn(active && 'stroke-[2.4]')} />
+              <span className="text-[10px] font-semibold">{link.label}</span>
             </Link>
           )
         })}
