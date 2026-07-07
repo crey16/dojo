@@ -20,8 +20,8 @@ import { getCurrentUserId } from '@/lib/data/auth'
 import { getGroup } from '@/lib/data/groups'
 import { isSupabaseConfigured } from '@/lib/supabase/config'
 import { awardPointsAction, undoPointEventAction } from '@/app/actions/points'
-import { createRewardAction, updateRedemptionStatusAction } from '@/app/actions/rewards'
-import { createChallengeAction, updateSubmissionStatusAction } from '@/app/actions/challenges'
+import { createRewardAction, updateRewardAction, deleteRewardAction, updateRedemptionStatusAction } from '@/app/actions/rewards'
+import { createChallengeAction, updateChallengeAction, deleteChallengeAction, updateSubmissionStatusAction } from '@/app/actions/challenges'
 import { formatRelativeTime } from '@/lib/utils'
 import type { GroupMember, PointCategory, Reward, RewardRedemption, Challenge, ChallengeSubmission, PointEvent } from '@/lib/types'
 
@@ -58,6 +58,11 @@ export default function AdminPage() {
   const [rewardDesc, setRewardDesc] = useState('')
   const [rewardCost, setRewardCost] = useState('')
   const [rewardLoading, setRewardLoading] = useState(false)
+  const [rewardMsg, setRewardMsg] = useState('')
+
+  // Edit reward state
+  const [editReward, setEditReward] = useState<Reward | null>(null)
+  const [confirmDeleteReward, setConfirmDeleteReward] = useState('')
 
   // Create challenge state
   const [challengeTitle, setChallengeTitle] = useState('')
@@ -65,6 +70,11 @@ export default function AdminPage() {
   const [challengePoints, setChallengePoints] = useState('')
   const [challengeDue, setChallengeDue] = useState('')
   const [challengeLoading, setChallengeLoading] = useState(false)
+  const [challengeMsg, setChallengeMsg] = useState('')
+
+  // Edit challenge state
+  const [editChallenge, setEditChallenge] = useState<Challenge | null>(null)
+  const [confirmDeleteChallenge, setConfirmDeleteChallenge] = useState('')
 
   // Invite code
   const [inviteCode, setInviteCode] = useState('')
@@ -165,6 +175,77 @@ export default function AdminPage() {
       setChallenges(chs)
     }
     setChallengeLoading(false)
+  }
+
+  async function handleSaveReward(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editReward) return
+    setRewardMsg('')
+    const { error } = isSupabaseConfigured()
+      ? await updateRewardAction(editReward.id, {
+          title: editReward.title,
+          description: editReward.description,
+          cost: editReward.cost,
+        })
+      : { error: null }
+    if (error) { setRewardMsg(error); return }
+    setEditReward(null)
+    setRewards(await getRewards(groupId))
+  }
+
+  async function handleToggleReward(r: Reward) {
+    setRewardMsg('')
+    const { error } = isSupabaseConfigured()
+      ? await updateRewardAction(r.id, { active: !r.active })
+      : { error: null }
+    if (error) setRewardMsg(error)
+    else setRewards(await getRewards(groupId))
+  }
+
+  async function handleDeleteReward(id: string) {
+    setRewardMsg('')
+    setConfirmDeleteReward('')
+    const { error } = isSupabaseConfigured()
+      ? await deleteRewardAction(id)
+      : { error: null }
+    if (error) setRewardMsg(error)
+    else setRewards(await getRewards(groupId))
+  }
+
+  async function handleSaveChallenge(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editChallenge) return
+    setChallengeMsg('')
+    const { error } = isSupabaseConfigured()
+      ? await updateChallengeAction(editChallenge.id, {
+          title: editChallenge.title,
+          description: editChallenge.description,
+          points: editChallenge.points,
+          due_date: editChallenge.due_date,
+        })
+      : { error: null }
+    if (error) { setChallengeMsg(error); return }
+    setEditChallenge(null)
+    setChallenges(await getChallenges(groupId))
+  }
+
+  async function handleToggleChallenge(c: Challenge) {
+    setChallengeMsg('')
+    const { error } = isSupabaseConfigured()
+      ? await updateChallengeAction(c.id, { active: !c.active })
+      : { error: null }
+    if (error) setChallengeMsg(error)
+    else setChallenges(await getChallenges(groupId))
+  }
+
+  async function handleDeleteChallenge(id: string) {
+    setChallengeMsg('')
+    setConfirmDeleteChallenge('')
+    const { error } = isSupabaseConfigured()
+      ? await deleteChallengeAction(id)
+      : { error: null }
+    if (error) setChallengeMsg(error)
+    else setChallenges(await getChallenges(groupId))
   }
 
   async function handleRedemptionStatus(id: string, status: 'approved' | 'denied') {
@@ -346,13 +427,42 @@ export default function AdminPage() {
 
           <div>
             <h3 className="font-black text-purple-900 mb-2">All Rewards ({rewards.length})</h3>
+            {rewardMsg && (
+              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-2 mb-2 text-xs font-bold text-red-700">{rewardMsg}</div>
+            )}
+            {rewards.length === 0 && (
+              <p className="text-sm text-gray-400 py-4 text-center">No rewards yet — create one above.</p>
+            )}
             {rewards.map(r => (
-              <div key={r.id} className="bg-white rounded-xl border border-purple-100 p-3 mb-2 flex items-center justify-between">
-                <div>
-                  <p className="font-bold text-sm">{r.title}</p>
-                  <p className="text-xs text-gray-400">⭐ {r.cost} pts</p>
-                </div>
-                <Badge variant={r.active ? 'green' : 'gray'}>{r.active ? 'Active' : 'Inactive'}</Badge>
+              <div key={r.id} className="bg-white rounded-xl border border-purple-100 p-3 mb-2">
+                {editReward?.id === r.id ? (
+                  <form onSubmit={handleSaveReward} className="flex flex-col gap-2">
+                    <Input label="Title" value={editReward.title} onChange={e => setEditReward({ ...editReward, title: e.target.value })} required />
+                    <Textarea label="Description" value={editReward.description} onChange={e => setEditReward({ ...editReward, description: e.target.value })} rows={2} />
+                    <Input label="Point Cost" type="number" value={String(editReward.cost)} onChange={e => setEditReward({ ...editReward, cost: parseInt(e.target.value) || 0 })} required />
+                    <div className="flex gap-2">
+                      <Button type="submit" size="sm" className="flex-1">Save</Button>
+                      <Button type="button" size="sm" variant="secondary" className="flex-1" onClick={() => setEditReward(null)}>Cancel</Button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm truncate">{r.title}</p>
+                      <p className="text-xs text-gray-400">⭐ {r.cost} pts</p>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Badge variant={r.active ? 'green' : 'gray'}>{r.active ? 'Active' : 'Inactive'}</Badge>
+                      <Button variant="ghost" size="sm" onClick={() => { setConfirmDeleteReward(''); setEditReward(r) }}>✏️</Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleToggleReward(r)}>{r.active ? '💤' : '▶️'}</Button>
+                      {confirmDeleteReward === r.id ? (
+                        <Button variant="danger" size="sm" onClick={() => handleDeleteReward(r.id)}>Really delete?</Button>
+                      ) : (
+                        <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteReward(r.id)}>🗑️</Button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -403,13 +513,43 @@ export default function AdminPage() {
 
           <div>
             <h3 className="font-black text-purple-900 mb-2">All Challenges ({challenges.length})</h3>
+            {challengeMsg && (
+              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-2 mb-2 text-xs font-bold text-red-700">{challengeMsg}</div>
+            )}
+            {challenges.length === 0 && (
+              <p className="text-sm text-gray-400 py-4 text-center">No challenges yet — create one above.</p>
+            )}
             {challenges.map(c => (
-              <div key={c.id} className="bg-white rounded-xl border border-purple-100 p-3 mb-2 flex items-center justify-between">
-                <div>
-                  <p className="font-bold text-sm">{c.title}</p>
-                  <p className="text-xs text-gray-400">✨ {c.points} pts</p>
-                </div>
-                <Badge variant={c.active ? 'green' : 'gray'}>{c.active ? 'Active' : 'Inactive'}</Badge>
+              <div key={c.id} className="bg-white rounded-xl border border-purple-100 p-3 mb-2">
+                {editChallenge?.id === c.id ? (
+                  <form onSubmit={handleSaveChallenge} className="flex flex-col gap-2">
+                    <Input label="Title" value={editChallenge.title} onChange={e => setEditChallenge({ ...editChallenge, title: e.target.value })} required />
+                    <Textarea label="Description" value={editChallenge.description} onChange={e => setEditChallenge({ ...editChallenge, description: e.target.value })} rows={2} />
+                    <Input label="Points Reward" type="number" value={String(editChallenge.points)} onChange={e => setEditChallenge({ ...editChallenge, points: parseInt(e.target.value) || 0 })} required />
+                    <Input label="Due Date (optional)" type="date" value={editChallenge.due_date?.slice(0, 10) ?? ''} onChange={e => setEditChallenge({ ...editChallenge, due_date: e.target.value || null })} />
+                    <div className="flex gap-2">
+                      <Button type="submit" size="sm" className="flex-1">Save</Button>
+                      <Button type="button" size="sm" variant="secondary" className="flex-1" onClick={() => setEditChallenge(null)}>Cancel</Button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm truncate">{c.title}</p>
+                      <p className="text-xs text-gray-400">✨ {c.points} pts{c.due_date ? ` · due ${c.due_date.slice(0, 10)}` : ''}</p>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Badge variant={c.active ? 'green' : 'gray'}>{c.active ? 'Active' : 'Inactive'}</Badge>
+                      <Button variant="ghost" size="sm" onClick={() => { setConfirmDeleteChallenge(''); setEditChallenge(c) }}>✏️</Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleToggleChallenge(c)}>{c.active ? '💤' : '▶️'}</Button>
+                      {confirmDeleteChallenge === c.id ? (
+                        <Button variant="danger" size="sm" onClick={() => handleDeleteChallenge(c.id)}>Really delete?</Button>
+                      ) : (
+                        <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteChallenge(c.id)}>🗑️</Button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

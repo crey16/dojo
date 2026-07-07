@@ -15,6 +15,40 @@ export async function createChallengeAction(
   return { error: error?.message ?? null }
 }
 
+export async function updateChallengeAction(
+  challengeId: string,
+  updates: Partial<Pick<Challenge, 'title' | 'description' | 'points' | 'due_date' | 'active'>>
+): Promise<{ error: string | null }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  // RLS restricts updates to group admins; empty result means no permission
+  const { data, error } = await supabase
+    .from('challenges')
+    .update(updates)
+    .eq('id', challengeId)
+    .select()
+  if (error) return { error: error.message }
+  if (!data?.length) return { error: 'Only group admins can edit challenges' }
+  return { error: null }
+}
+
+export async function deleteChallengeAction(challengeId: string): Promise<{ error: string | null }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { data, error } = await supabase
+    .from('challenges')
+    .delete()
+    .eq('id', challengeId)
+    .select()
+  if (error) return { error: error.message }
+  if (!data?.length) return { error: 'Only group admins can delete challenges' }
+  return { error: null }
+}
+
 export async function submitChallengeAction(
   challengeId: string,
   groupId: string,

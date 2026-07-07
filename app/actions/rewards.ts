@@ -15,6 +15,40 @@ export async function createRewardAction(
   return { error: error?.message ?? null }
 }
 
+export async function updateRewardAction(
+  rewardId: string,
+  updates: Partial<Pick<Reward, 'title' | 'description' | 'cost' | 'active'>>
+): Promise<{ error: string | null }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  // RLS restricts updates to group admins; empty result means no permission
+  const { data, error } = await supabase
+    .from('rewards')
+    .update(updates)
+    .eq('id', rewardId)
+    .select()
+  if (error) return { error: error.message }
+  if (!data?.length) return { error: 'Only group admins can edit rewards' }
+  return { error: null }
+}
+
+export async function deleteRewardAction(rewardId: string): Promise<{ error: string | null }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { data, error } = await supabase
+    .from('rewards')
+    .delete()
+    .eq('id', rewardId)
+    .select()
+  if (error) return { error: error.message }
+  if (!data?.length) return { error: 'Only group admins can delete rewards' }
+  return { error: null }
+}
+
 export async function redeemRewardAction(
   rewardId: string
 ): Promise<{ error: string | null }> {
