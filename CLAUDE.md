@@ -30,9 +30,13 @@ lib/
   supabase/                   Supabase client/server/middleware/config
   data/                       Data access layer (branches mock vs Supabase)
 supabase/
-  schema.sql                  Run first in Supabase SQL Editor
-  policies.sql                Run second (RLS policies)
-  seed.sql                    Run third (optional seed data)
+  schema.sql                  Fresh install: run first in Supabase SQL Editor
+  policies.sql                Fresh install: run second (RLS policies)
+  migrations/                 Numbered migrations (000-005). Fresh installs run
+                              004 + 005 after policies.sql; pre-roster databases
+                              run 000-005 in order.
+  seed.sql                    Optional example data (categories auto-seed now)
+  tests/rls-checks.sql        Manual RLS assertion script (runs in a rollback)
 ```
 
 ## Demo Mode
@@ -59,7 +63,10 @@ npm run lint       # ESLint
 2. Copy Project URL and anon key to `.env.local`
 3. Run `supabase/schema.sql` in SQL Editor
 4. Run `supabase/policies.sql` in SQL Editor
-5. Optionally run `supabase/seed.sql` with your group UUID filled in
+5. Run `supabase/migrations/004_join_and_defaults.sql` then `005_submissions_redemptions.sql`
+6. Optionally run `supabase/seed.sql` (rewards/roster examples; categories are auto-created)
+
+Existing databases created before the roster model instead run `supabase/migrations/000`–`005` in order. Group creation, joining, challenge review, and reward redemption all go through security-definer RPCs — direct membership inserts are blocked by RLS.
 
 ## Key Design Rules
 
