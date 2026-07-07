@@ -3,11 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { MonsterAvatar } from '@/components/MonsterAvatar'
-import { PointBubble } from '@/components/PointBubble'
+import { AvatarDisc } from '@/components/MonsterAvatar'
 import { ActivityItem } from '@/components/ActivityItem'
-import { StatCard } from '@/components/StatCard'
 import { Badge } from '@/components/ui/Badge'
+import { Icon } from '@/components/ui/Icon'
 import { LoadingState } from '@/components/ui/LoadingState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { getGroupMembers } from '@/lib/data/members'
@@ -57,51 +56,75 @@ export default function MemberProfilePage() {
   if (loading) return <LoadingState />
   if (!member) {
     return (
-      <div className="flex flex-col items-center gap-4 pt-16">
-        <span className="text-6xl">🤔</span>
-        <p className="font-black text-xl text-purple-900">Member not found</p>
-        <Link href={`/groups/${groupId}/members`} className="text-purple-600 font-bold underline">← Back to Members</Link>
+      <div className="card mt-8">
+        <EmptyState
+          title="Member not found"
+          description="They may have been removed from the roster."
+          action={
+            <Link href={`/groups/${groupId}/members`} className="text-[13px] font-black text-primary hover:text-primary-dark">
+              Back to the squad
+            </Link>
+          }
+        />
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <Link href={`/groups/${groupId}/members`} className="text-sm text-purple-500 font-bold hover:underline flex items-center gap-1">
-        ← Members
+    <div className="flex flex-col">
+      <Link
+        href={`/groups/${groupId}/members`}
+        aria-label="Back to members"
+        className="w-10 h-10 rounded-full bg-white shadow-card flex items-center justify-center text-body active:scale-90 transition-transform"
+      >
+        <Icon name="back" size={20} className="stroke-[2.4]" />
       </Link>
 
       {/* Hero */}
-      <div className="bg-gradient-to-br from-purple-600 to-pink-500 rounded-3xl p-6 text-white flex flex-col items-center gap-3">
-        <MonsterAvatar name={name} size="xl" mood={mood} />
-        <div className="text-center">
-          <h2 className="text-2xl font-black">{name}</h2>
-          <div className="flex items-center gap-2 justify-center mt-1">
-            {member.role === 'admin' && <Badge variant="yellow">👑 Admin</Badge>}
-            {rank > 0 && <Badge variant="purple">Rank #{rank}</Badge>}
-          </div>
+      <div className="flex flex-col items-center text-center mt-1">
+        <AvatarDisc name={member.avatar_seed || name} size="lg" mood={mood} float className="shadow-[0_4px_14px_rgba(0,0,0,0.08)]" />
+        <h1 className="font-display font-bold text-[26px] text-ink mt-3">{name}</h1>
+        <div className="flex gap-2 mt-2 flex-wrap justify-center">
+          <Badge variant="purple">{totalPoints} pts</Badge>
+          {rank > 0 && <Badge variant="yellow">Rank #{rank}</Badge>}
+          {member.role === 'admin' && <Badge variant="blue">Admin</Badge>}
         </div>
-        <PointBubble points={totalPoints} size="lg" />
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard title="Total Points" value={totalPoints} emoji="⭐" color="purple" />
-        <StatCard title="This Week" value={weeklyPoints >= 0 ? `+${weeklyPoints}` : weeklyPoints} emoji="📅" color={weeklyPoints >= 0 ? 'green' : 'red'} />
+      {/* Week summary tiles */}
+      <div className="flex gap-2.5 mt-5">
+        <div className="flex-1 card px-2 py-3 text-center">
+          <div className={`w-2.5 h-2.5 rounded-full mx-auto mb-1.5 ${weeklyPoints >= 0 ? 'bg-positive' : 'bg-negative'}`} />
+          <p className="text-[11px] font-black text-body leading-snug">
+            {weeklyPoints >= 0 ? '+' : '−'}{Math.abs(weeklyPoints)} this week
+          </p>
+        </div>
+        <div className="flex-1 card px-2 py-3 text-center">
+          <div className="w-2.5 h-2.5 rounded-full bg-primary mx-auto mb-1.5" />
+          <p className="text-[11px] font-black text-body leading-snug">
+            {rank > 0 && rank <= 3 ? 'Podium finisher' : 'Squad grinder'}
+          </p>
+        </div>
+        <div className="flex-1 card px-2 py-3 text-center">
+          <div className="w-2.5 h-2.5 rounded-full bg-gold mx-auto mb-1.5" />
+          <p className="text-[11px] font-black text-body leading-snug">
+            {member.user_id ? 'Claimed profile' : 'Roster member'}
+          </p>
+        </div>
       </div>
 
-      {/* Activity */}
-      <div>
-        <h3 className="font-black text-purple-900 mb-3">📋 Point History</h3>
-        <div className="bg-white rounded-2xl border-2 border-purple-100 px-4">
-          {events.length === 0 ? (
-            <EmptyState emoji="📭" title="No points yet!" />
-          ) : (
-            events.map(event => (
-              <ActivityItem key={event.id} event={event} />
-            ))
-          )}
-        </div>
+      {/* Point history */}
+      <div className="flex items-center justify-between mt-6 mb-2.5">
+        <h2 className="font-display font-bold text-lg text-ink">Point history</h2>
+      </div>
+      <div className="card px-4 py-1.5">
+        {events.length === 0 ? (
+          <EmptyState title="No points yet — someone do something legendary." />
+        ) : (
+          events.map(event => (
+            <ActivityItem key={event.id} event={event} />
+          ))
+        )}
       </div>
     </div>
   )

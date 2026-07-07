@@ -1,15 +1,19 @@
+import { MonsterAvatar } from '../MonsterAvatar'
+
 interface EmptyStateProps {
   emoji?: string
   title: string
   description?: string
+  action?: React.ReactNode
 }
 
-export function EmptyState({ emoji = '🫙', title, description }: EmptyStateProps) {
+export function EmptyState({ title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-      <div className="text-5xl mb-4 animate-float">{emoji}</div>
-      <h3 className="text-lg font-bold text-gray-800 mb-1.5">{title}</h3>
-      {description && <p className="text-gray-500 text-sm max-w-xs">{description}</p>}
+    <div className="flex flex-col items-center justify-center gap-2 py-10 px-6 text-center">
+      <MonsterAvatar name="Nobody Yet" size="md" mood="guilty" className="opacity-85" />
+      <h3 className="text-[13px] font-extrabold text-[#6B7280]">{title}</h3>
+      {description && <p className="text-xs font-bold text-muted max-w-xs">{description}</p>}
+      {action && <div className="mt-2">{action}</div>}
     </div>
   )
 }

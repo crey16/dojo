@@ -45,12 +45,12 @@ export default function CreateGroupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm border-b-4 border-purple-300">
+    <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
+      <div className="bg-white rounded-[28px] shadow-card p-8 w-full max-w-sm">
         <div className="text-center mb-8">
-          <span className="text-5xl">🏯</span>
-          <h1 className="text-2xl font-black text-purple-900 mt-2">Create Your Dojo</h1>
-          <p className="text-sm text-gray-500 mt-1">Give your group a name</p>
+          <svg viewBox="0 0 100 100" width="56" height="56" aria-hidden="true" className="inline-block rounded-2xl"><rect width="100" height="100" rx="26" fill="#7C3AED" /><circle cx="38" cy="42" r="10" fill="#FFFFFF" /><circle cx="40" cy="43" r="4.5" fill="#1F2937" /><circle cx="62" cy="42" r="10" fill="#FFFFFF" /><circle cx="64" cy="43" r="4.5" fill="#1F2937" /><path d="M36 64 Q50 76 64 64" fill="none" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" /></svg>
+          <h1 className="font-display font-bold text-2xl text-ink mt-3">Create your dojo</h1>
+          <p className="text-[13px] font-bold text-muted mt-1">Give your group a name</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -64,19 +64,19 @@ export default function CreateGroupPage() {
           />
 
           {error && (
-            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-3">
-              <p className="text-sm text-red-600 font-medium">{error}</p>
+            <div className="bg-negative-soft rounded-[14px] p-3">
+              <p className="text-[13px] font-extrabold text-negative-ink">{error}</p>
             </div>
           )}
 
           <Button type="submit" loading={loading} size="lg" className="w-full">
-            🚀 Create Group
+            Create group
           </Button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-4">
+        <p className="text-center text-[13px] font-bold text-muted mt-4">
           Have an invite code?{' '}
-          <Link href="/groups/join" className="text-purple-600 font-bold hover:underline">
+          <Link href="/groups/join" className="text-primary font-black hover:text-primary-dark">
             Join instead
           </Link>
         </p>

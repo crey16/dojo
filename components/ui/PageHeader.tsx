@@ -5,15 +5,12 @@ interface PageHeaderProps {
   action?: React.ReactNode
 }
 
-export function PageHeader({ title, subtitle, emoji, action }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, action }: PageHeaderProps) {
   return (
-    <div className="flex items-start justify-between gap-3 mb-6">
+    <div className="flex items-start justify-between gap-3 mb-5">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          {emoji && <span className="text-xl">{emoji}</span>}
-          {title}
-        </h1>
-        {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
+        <h1 className="font-display font-bold text-[28px] leading-tight text-ink">{title}</h1>
+        {subtitle && <p className="text-[13px] font-bold text-muted mt-0.5">{subtitle}</p>}
       </div>
       {action && <div className="flex-shrink-0">{action}</div>}
     </div>

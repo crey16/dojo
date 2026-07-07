@@ -248,67 +248,112 @@ export default function MembersPage() {
 
   if (loading) return <LoadingState message="Opening class roster..." />
 
+  const categoryTile = (category: PointCategory) => {
+    const positive = category.default_points > 0
+    const active = categoryId === category.id
+    return (
+      <button
+        key={category.id}
+        type="button"
+        onClick={() => chooseCategory(category.id)}
+        className={`bg-white border-2 rounded-[18px] p-3 flex flex-col items-start gap-1.5 text-left shadow-[0_2px_8px_rgba(0,0,0,0.05)] cursor-pointer transition-all active:scale-95 ${
+          active
+            ? positive ? 'border-positive' : 'border-negative'
+            : positive ? 'border-positive-soft hover:border-positive' : 'border-negative-soft hover:border-negative'
+        }`}
+      >
+        {category.emoji && <span className="text-xl">{category.emoji}</span>}
+        <span className="font-black text-[12.5px] text-ink leading-snug">{category.name}</span>
+        <span className={`rounded-full px-2.5 py-[3px] font-black text-xs tabular-nums ${
+          positive ? 'bg-positive-soft text-positive-ink' : 'bg-negative-soft text-negative-ink'
+        }`}>
+          {positive ? '+' : '−'}{Math.abs(category.default_points)}
+        </span>
+      </button>
+    )
+  }
+
+  const positiveCategories = categories.filter(category => category.default_points > 0)
+  const negativeCategories = categories.filter(category => category.default_points <= 0)
+
   const awardForm = (memberIds: string[]) => (
     <div className="flex flex-col gap-3">
-      <Select label="Point category" value={categoryId} onChange={event => chooseCategory(event.target.value)}>
-        <option value="">Custom points</option>
-        {categories.map(category => <option key={category.id} value={category.id}>{category.emoji} {category.name} ({category.default_points > 0 ? '+' : ''}{category.default_points})</option>)}
-      </Select>
-      <Input label="Points (negative removes points)" type="number" value={amount} onChange={event => setAmount(event.target.value)} />
-      <Input label="Reason" value={reason} onChange={event => setReason(event.target.value)} placeholder="What happened?" />
-      {message && <p className="text-sm font-bold text-red-600">{message}</p>}
-      <Button onClick={() => award(memberIds)} loading={busy} className="w-full">
-        {Number(amount) < 0 ? 'Remove points' : `Award ${memberIds.length > 1 ? `${memberIds.length} members` : 'points'}`}
+      {positiveCategories.length > 0 && (
+        <>
+          <p className="text-xs font-black text-positive-ink tracking-wider">GIVE POINTS</p>
+          <div className="grid grid-cols-2 gap-2.5">{positiveCategories.map(categoryTile)}</div>
+        </>
+      )}
+      {negativeCategories.length > 0 && (
+        <>
+          <p className="text-xs font-black text-negative-ink tracking-wider mt-1.5">TAKE POINTS</p>
+          <div className="grid grid-cols-2 gap-2.5">{negativeCategories.map(categoryTile)}</div>
+        </>
+      )}
+      <div className="grid grid-cols-2 gap-2.5 mt-1.5">
+        <Input label="Points" type="number" value={amount} onChange={event => setAmount(event.target.value)} />
+        <Input label="Reason (optional)" value={reason} onChange={event => setReason(event.target.value)} placeholder="What happened?" />
+      </div>
+      {message && <p className="text-[13px] font-bold text-negative-ink">{message}</p>}
+      <Button onClick={() => award(memberIds)} loading={busy} className="w-full" size="lg">
+        {Number(amount) < 0 ? 'Take points' : `Give points${memberIds.length > 1 ? ` to ${memberIds.length} members` : ''}`}
       </Button>
     </div>
   )
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f4f4f3]">
-      <ClassToolbar
-        isAdmin={isAdmin}
-        selecting={selecting}
-        onAdd={() => { setDisplayName(''); setModal('add') }}
-        onToggleSelect={() => { setSelecting(value => !value); setSelectedIds([]) }}
-        onReset={() => window.alert('Reset bubbles is a session-display feature planned for the next pass. Point history is unchanged.')}
-      />
-
-      <section className="px-4 sm:px-7 py-6">
-        <div className="flex items-end justify-between gap-4 mb-8">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] font-black text-purple-500">HCWK class</p>
-            <h1 className="text-2xl sm:text-3xl font-black text-gray-800 mt-1">Class Roster</h1>
-            <p className="text-sm text-gray-500">{members.filter(member => member.status === 'active').length} active · {members.length} total</p>
-          </div>
-          {selecting && (
-            <Button disabled={selectedIds.length === 0} onClick={() => setModal('multiple')} size="sm">
-              Award selected ({selectedIds.length})
-            </Button>
-          )}
+    <div className="flex flex-col">
+      <div className="flex items-baseline justify-between gap-4">
+        <div>
+          <h1 className="font-display font-bold text-[28px] leading-tight text-ink">The Squad</h1>
+          <p className="text-[13px] font-bold text-muted mt-0.5">
+            {isAdmin ? 'Tap anyone to give (or take) points' : `${members.filter(member => member.status === 'active').length} active · ${members.length} total`}
+          </p>
         </div>
+        <span className="text-xs font-extrabold text-muted flex-none">{members.length} members</span>
+      </div>
 
-        {members.length === 0 ? (
-          <div className="flex flex-col items-center">
-            <EmptyState emoji="🧑‍🏫" title="No members yet"
-              description="Add your first roster member — no account needed. They can claim their profile later." />
-            {isAdmin && <Button onClick={() => { setDisplayName(''); setModal('add') }}>+ Add your first member</Button>}
-          </div>
-        ) : (
-          <div className="roster-grid">
-            {members.map((member, index) => (
-              <RosterMemberCard key={member.id} member={member} index={index} points={points[member.id] ?? 0}
-                selected={selectedIds.includes(member.id)} onClick={() => openMember(member)}
-                onQuickAward={isAdmin && !selecting ? amount => quickAward(member, amount) : undefined} />
-            ))}
-          </div>
-        )}
-      </section>
+      <div className="mt-3">
+        <ClassToolbar
+          isAdmin={isAdmin}
+          selecting={selecting}
+          onAdd={() => { setDisplayName(''); setModal('add') }}
+          onToggleSelect={() => { setSelecting(value => !value); setSelectedIds([]) }}
+          onReset={() => {}}
+        />
+      </div>
+
+      {selecting && (
+        <div className="mt-3">
+          <Button disabled={selectedIds.length === 0} onClick={() => setModal('multiple')} size="sm" className="w-full">
+            Award selected ({selectedIds.length})
+          </Button>
+        </div>
+      )}
+
+      {members.length === 0 ? (
+        <div className="card mt-4">
+          <EmptyState
+            title="No members yet"
+            description="Add your first roster member — no account needed. They can claim their profile later."
+            action={isAdmin ? <Button onClick={() => { setDisplayName(''); setModal('add') }}>+ Add your first member</Button> : undefined}
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-[18px] mt-5 pt-1">
+          {members.map((member, index) => (
+            <RosterMemberCard key={member.id} member={member} index={index} points={points[member.id] ?? 0}
+              selected={selectedIds.includes(member.id)} onClick={() => openMember(member)}
+              onQuickAward={isAdmin && !selecting ? amount => quickAward(member, amount) : undefined} />
+          ))}
+        </div>
+      )}
 
       {modal === 'add' && (
         <RosterModal title="Add a roster member" subtitle="They can earn points without creating an account." onClose={closeModal}>
           <form onSubmit={addMember} className="flex flex-col gap-3">
             <Input label="Display name" value={displayName} onChange={event => setDisplayName(event.target.value)} autoFocus required />
-            {message && <p className="text-sm font-bold text-red-600">{message}</p>}
+            {message && <p className="text-[13px] font-bold text-negative-ink">{message}</p>}
             <Button type="submit" loading={busy}>Add to roster</Button>
           </form>
         </RosterModal>
@@ -331,7 +376,7 @@ export default function MembersPage() {
           {isAdmin ? (
             <div className="flex flex-col gap-5">
               {awardForm([selectedMember.id])}
-              <div className="border-t border-purple-100 pt-4 flex flex-col gap-3">
+              <div className="border-t border-hairline pt-4 flex flex-col gap-3">
                 <Input label="Display name" value={displayName} onChange={event => setDisplayName(event.target.value)} />
                 <Select label="Attendance / status" value={status} onChange={event => setStatus(event.target.value as GroupMember['status'])}>
                   <option value="active">Active</option><option value="absent">Absent</option><option value="inactive">Inactive</option>
@@ -344,10 +389,10 @@ export default function MembersPage() {
                 )}
                 <Button variant="danger" onClick={removeMember} loading={busy}>Remove from roster</Button>
               </div>
-              <div className="border-t border-purple-100 pt-4">
-                <p className="text-xs uppercase tracking-widest font-black text-purple-500 mb-1">Point history</p>
+              <div className="border-t border-hairline pt-4">
+                <p className="text-xs font-black text-muted tracking-wider mb-1">Point history</p>
                 {memberEvents.length === 0 ? (
-                  <p className="text-sm text-gray-400 py-2">No points yet.</p>
+                  <p className="text-[13px] font-bold text-muted py-2">No points yet.</p>
                 ) : (
                   <div className="max-h-48 overflow-y-auto">
                     {memberEvents.slice(0, 10).map(event => (
@@ -359,19 +404,19 @@ export default function MembersPage() {
             </div>
           ) : selectedMember.user_id === currentUserId ? (
             <div>
-              <p className="text-xs uppercase tracking-widest font-black text-purple-500 mb-1">Your point history</p>
+              <p className="text-xs font-black text-muted tracking-wider mb-1">Your point history</p>
               {memberEvents.length === 0 ? (
-                <p className="text-sm text-gray-400 py-2">No points yet.</p>
+                <p className="text-[13px] font-bold text-muted py-2">No points yet.</p>
               ) : (
                 <div className="max-h-48 overflow-y-auto">
                   {memberEvents.slice(0, 10).map(event => <ActivityItem key={event.id} event={event} />)}
                 </div>
               )}
-              {message && <p className="text-sm font-bold text-red-600 mt-2">{message}</p>}
+              {message && <p className="text-[13px] font-bold text-negative-ink mt-2">{message}</p>}
             </div>
-          ) : <p className="text-center text-sm text-gray-500">Only admins can manage roster members and points.</p>}
+          ) : <p className="text-center text-[13px] font-bold text-muted">Only admins can manage roster members and points.</p>}
           <div className="mt-4 text-center">
-            <Link href={`/groups/${groupId}/members/${selectedMember.id}`} className="text-xs font-bold text-purple-500 hover:underline">
+            <Link href={`/groups/${groupId}/members/${selectedMember.id}`} className="text-xs font-black text-primary hover:text-primary-dark">
               View full profile →
             </Link>
           </div>

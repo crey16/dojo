@@ -19,6 +19,9 @@ const PATHS: Record<string, React.ReactNode> = {
   star: <path d="m12 3 2.7 5.8 6.3.8-4.6 4.3 1.2 6.1L12 17l-5.6 3 1.2-6.1L3 9.6l6.3-.8L12 3Z" />,
   plus: <path d="M12 5v14M5 12h14" />,
   minus: <path d="M5 12h14" />,
+  flag: <path d="M6 21V4M6 4.5c4-2 8 2 12 .5v9c-4 1.5-8-2.5-12-.5" />,
+  shield: <path d="M12 3l7 3v5c0 5-3.5 8.2-7 9.5C8.5 19.2 5 16 5 11V6z" />,
+  back: <path d="M15 5l-7 7 7 7" />,
 }
 
 export type IconName = keyof typeof PATHS

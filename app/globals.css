@@ -1,15 +1,36 @@
 @import "tailwindcss";
 
-@theme {
-  --font-display: "Comic Sans MS", "Chalkboard SE", cursive;
+@theme inline {
+  --font-sans: var(--font-nunito), system-ui, sans-serif;
+  --font-display: var(--font-baloo), sans-serif;
+}
 
-  --color-dojo-purple: #7c3aed;
-  --color-dojo-pink: #ec4899;
-  --color-dojo-yellow: #fbbf24;
-  --color-dojo-green: #22c55e;
-  --color-dojo-red: #ef4444;
-  --color-dojo-blue: #3b82f6;
-  --color-dojo-orange: #f97316;
+@theme {
+  /* Warm canvas + calm chrome (ClassDojo-style: quiet frame, playful content) */
+  --color-canvas: #FAF9F6;
+  --color-ink: #1F2937;
+  --color-body: #374151;
+  --color-muted: #9CA3AF;
+  --color-hairline: #F7F5F0;
+  --color-shell: #F0EBE2;
+
+  /* Primary + semantic roles only */
+  --color-primary: #7C3AED;
+  --color-primary-dark: #6D28D9;
+  --color-primary-soft: #F3EFFC;
+  --color-positive: #22C55E;
+  --color-positive-soft: #DCFCE7;
+  --color-positive-ink: #15803D;
+  --color-negative: #EF4444;
+  --color-negative-soft: #FEE2E2;
+  --color-negative-ink: #B91C1C;
+  --color-gold: #FBBF24;
+  --color-gold-soft: #FEF3C7;
+  --color-gold-ink: #B45309;
+
+  --shadow-card: 0 2px 8px rgb(0 0 0 / 0.06);
+  --shadow-card-hover: 0 6px 16px rgb(0 0 0 / 0.10);
+  --shadow-nav: 0 -4px 16px rgb(0 0 0 / 0.07);
 
   --radius-xl: 1.25rem;
   --radius-2xl: 1.5rem;
@@ -21,8 +42,9 @@
 }
 
 body {
-  background-color: #f9fafb;
-  font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--color-canvas);
+  color: var(--color-body);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -30,112 +52,44 @@ body {
   font-family: var(--font-display);
 }
 
-/* Wiggle animation for fun elements */
-@keyframes wiggle {
-  0%, 100% { transform: rotate(-3deg); }
-  50% { transform: rotate(3deg); }
-}
-
-@keyframes bounce-in {
+@keyframes pop-in {
   0% { transform: scale(0.3); opacity: 0; }
-  50% { transform: scale(1.05); }
-  70% { transform: scale(0.9); }
+  55% { transform: scale(1.12); }
+  75% { transform: scale(0.95); }
   100% { transform: scale(1); opacity: 1; }
 }
 
-@keyframes float {
+@keyframes floaty {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  50% { transform: translateY(-7px); }
 }
 
-.animate-wiggle { animation: wiggle 0.5s ease-in-out; }
-.animate-bounce-in { animation: bounce-in 0.5s ease-out; }
-.animate-float { animation: float 3s ease-in-out infinite; }
-
-/* Sticker-like outline effect */
-.sticker {
-  -webkit-text-stroke: 2px white;
-  text-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+@keyframes chip-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
-.class-toolbar {
-  @apply bg-white border-b border-gray-200 px-3 sm:px-5 py-3 flex items-center justify-between gap-3 sticky top-0 z-30 shadow-sm;
+.animate-pop-in { animation: pop-in 0.3s ease-out; }
+.animate-floaty { animation: floaty 3.4s ease-in-out infinite; }
+.animate-chip-pop { animation: chip-pop 0.45s cubic-bezier(0.3, 1.4, 0.6, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pop-in, .animate-floaty, .animate-chip-pop {
+    animation: none;
+  }
 }
 
-.class-tool {
-  @apply flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-bold text-gray-600 hover:bg-purple-50 hover:text-purple-700 whitespace-nowrap cursor-pointer;
+/* One card recipe app-wide */
+.card {
+  @apply bg-white rounded-[20px] shadow-card;
 }
 
-.class-tool-active {
-  @apply bg-purple-100 text-purple-800;
+/* Pressable candy button edge */
+.btn-edge {
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.18);
 }
 
-.class-add-button {
-  @apply bg-sky-500 hover:bg-sky-600 text-white px-3 py-2 rounded-lg shadow-sm text-xs font-black whitespace-nowrap cursor-pointer;
-}
-
-.roster-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(154px, 1fr));
-  gap: 28px 20px;
-}
-
-.roster-card {
-  @apply relative min-h-28 bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer px-3 py-3 flex items-end gap-2 text-left;
-}
-
-.roster-card-inactive {
-  @apply opacity-45 grayscale;
-}
-
-.roster-card-selected {
-  @apply ring-4 ring-purple-400 border-purple-500;
-}
-
-.roster-avatar {
-  @apply -ml-2 -mb-1;
-}
-
-.roster-name {
-  @apply font-black text-sm text-gray-800 truncate;
-}
-
-.roster-meta {
-  @apply text-[10px] text-gray-400 font-semibold truncate mt-0.5;
-}
-
-.roster-points {
-  @apply absolute -top-3 -right-3 w-10 h-10 rounded-full bg-green-500 border-4 border-white shadow-md text-white text-base font-black flex items-center justify-center z-10;
-}
-
-.roster-points-negative {
-  @apply bg-red-500;
-}
-
-.roster-status {
-  @apply absolute right-1.5 bottom-1.5 bg-red-400 text-white rounded-full px-2 py-0.5 text-[9px] font-black;
-}
-
-.roster-selected-check {
-  @apply absolute top-2 left-2 bg-purple-600 text-white w-6 h-6 rounded-full flex items-center justify-center font-black;
-}
-
-.roster-role-badge {
-  @apply inline-flex items-center gap-0.5 mt-0.5 bg-yellow-100 text-yellow-800 border border-yellow-300 rounded-full px-1.5 text-[9px] font-black;
-}
-
-.roster-quick {
-  @apply absolute bottom-1.5 right-1.5 flex gap-1 z-10;
-}
-
-.roster-quick-btn {
-  @apply w-6 h-6 rounded-full text-white text-sm font-black flex items-center justify-center shadow-sm cursor-pointer transition-transform active:scale-90 leading-none;
-}
-
-.roster-quick-plus {
-  @apply bg-green-500 hover:bg-green-600;
-}
-
-.roster-quick-minus {
-  @apply bg-red-400 hover:bg-red-500;
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
 }

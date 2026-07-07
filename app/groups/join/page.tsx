@@ -101,14 +101,14 @@ export default function JoinGroupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm border-b-4 border-purple-300">
+    <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
+      <div className="bg-white rounded-[28px] shadow-card p-8 w-full max-w-sm">
         {!group ? (
           <>
             <div className="text-center mb-8">
-              <span className="text-5xl">🔑</span>
-              <h1 className="text-2xl font-black text-purple-900 mt-2">Join a Dojo</h1>
-              <p className="text-sm text-gray-500 mt-1">Enter your 6-letter invite code</p>
+              <svg viewBox="0 0 100 100" width="56" height="56" aria-hidden="true" className="inline-block rounded-2xl"><rect width="100" height="100" rx="26" fill="#7C3AED" /><circle cx="38" cy="42" r="10" fill="#FFFFFF" /><circle cx="40" cy="43" r="4.5" fill="#1F2937" /><circle cx="62" cy="42" r="10" fill="#FFFFFF" /><circle cx="64" cy="43" r="4.5" fill="#1F2937" /><path d="M36 64 Q50 76 64 64" fill="none" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" /></svg>
+              <h1 className="font-display font-bold text-2xl text-ink mt-3">Join a dojo</h1>
+              <p className="text-[13px] font-bold text-muted mt-1">Enter your 6-letter invite code</p>
             </div>
 
             <form onSubmit={handleLookup} className="flex flex-col gap-4">
@@ -124,19 +124,19 @@ export default function JoinGroupPage() {
               />
 
               {error && (
-                <div className="bg-red-50 border-2 border-red-200 rounded-xl p-3">
-                  <p className="text-sm text-red-600 font-medium">😬 {error}</p>
+                <div className="bg-negative-soft rounded-[14px] p-3">
+                  <p className="text-[13px] font-extrabold text-negative-ink">{error}</p>
                 </div>
               )}
 
               <Button type="submit" loading={loading} size="lg" className="w-full">
-                🚪 Join Group
+                Join group
               </Button>
             </form>
 
-            <p className="text-center text-sm text-gray-500 mt-4">
+            <p className="text-center text-[13px] font-bold text-muted mt-4">
               Starting fresh?{' '}
-              <Link href="/groups/create" className="text-purple-600 font-bold hover:underline">
+              <Link href="/groups/create" className="text-primary font-black hover:text-primary-dark">
                 Create a group
               </Link>
             </p>
@@ -144,9 +144,8 @@ export default function JoinGroupPage() {
         ) : (
           <>
             <div className="text-center mb-6">
-              <span className="text-5xl">👋</span>
-              <h1 className="text-2xl font-black text-purple-900 mt-2">{group.name}</h1>
-              <p className="text-sm text-gray-500 mt-1">Are you one of these people? Claim your spot to keep your points.</p>
+              <h1 className="font-display font-bold text-2xl text-ink">{group.name}</h1>
+              <p className="text-[13px] font-bold text-muted mt-1">Are you one of these people? Claim your spot to keep your points.</p>
             </div>
 
             <div className="grid grid-cols-3 gap-2 mb-4 max-h-64 overflow-y-auto">
@@ -158,33 +157,33 @@ export default function JoinGroupPage() {
                   className={cn(
                     'flex flex-col items-center gap-1 rounded-2xl border-2 p-2 cursor-pointer transition-all',
                     selectedId === member.id
-                      ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-300'
-                      : 'border-gray-200 hover:border-purple-300'
+                      ? 'border-primary bg-primary-soft'
+                      : 'border-shell hover:border-primary/40'
                   )}
                 >
                   <MonsterAvatar name={member.avatar_seed || member.display_name} size="sm" />
-                  <span className="text-xs font-bold text-gray-700 truncate w-full text-center">{member.display_name}</span>
+                  <span className="text-xs font-extrabold text-body truncate w-full text-center">{member.display_name}</span>
                 </button>
               ))}
             </div>
 
             {error && (
-              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-3 mb-4">
-                <p className="text-sm text-red-600 font-medium">😬 {error}</p>
+              <div className="bg-negative-soft rounded-[14px] p-3 mb-4">
+                <p className="text-[13px] font-extrabold text-negative-ink">{error}</p>
               </div>
             )}
 
             <div className="flex flex-col gap-2">
               <Button onClick={handleClaim} disabled={!selectedId} loading={loading} size="lg" className="w-full">
-                ✋ That&apos;s me — claim it
+                That&apos;s me — claim it
               </Button>
               <Button onClick={handleJoinAsNew} variant="secondary" loading={loading} className="w-full">
-                🆕 I&apos;m new — join as myself
+                I&apos;m new — join as myself
               </Button>
               <button
                 type="button"
                 onClick={() => { setGroup(null); setClaimable([]); setSelectedId(''); setError('') }}
-                className="text-xs text-gray-400 font-bold hover:text-gray-600 mt-1 cursor-pointer"
+                className="text-xs text-muted font-black hover:text-body mt-1 cursor-pointer"
               >
                 ← Different code
               </button>

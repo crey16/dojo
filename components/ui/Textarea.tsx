@@ -12,22 +12,22 @@ export function Textarea({ label, error, className, id, ...props }: TextareaProp
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={id} className="text-sm font-semibold text-gray-700">
+        <label htmlFor={id} className="text-[13px] font-extrabold text-body">
           {label}
         </label>
       )}
       <textarea
         id={id}
         className={cn(
-          'w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900',
-          'focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100',
-          'placeholder:text-gray-400 transition-colors resize-none',
-          error && 'border-red-400',
+          'w-full px-4 py-2.5 rounded-2xl border border-shell bg-white text-ink font-bold',
+          'focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-soft',
+          'placeholder:text-muted placeholder:font-semibold transition-colors resize-none',
+          error && 'border-negative',
           className
         )}
         {...props}
       />
-      {error && <p className="text-sm font-medium text-red-500">{error}</p>}
+      {error && <p className="text-[13px] font-bold text-negative-ink">{error}</p>}
     </div>
   )
 }

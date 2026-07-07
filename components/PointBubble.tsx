@@ -6,24 +6,27 @@ interface PointBubbleProps {
   showSign?: boolean
 }
 
+// The one point-chip component: green +N / red −N pill (spec: chipStyle)
 export function PointBubble({ points, size = 'md', showSign = false }: PointBubbleProps) {
   const positive = points >= 0
 
   const sizes = {
-    sm: 'text-sm px-2.5 py-1 min-w-[2.5rem]',
-    md: 'text-base px-3 py-1.5 min-w-[3.5rem]',
-    lg: 'text-2xl px-5 py-2 min-w-[5rem]',
-    xl: 'text-4xl px-7 py-3 min-w-[7rem]',
+    sm: 'text-xs px-2.5 py-1',
+    md: 'text-[13px] px-3 py-1',
+    lg: 'text-base px-4 py-1.5',
+    xl: 'text-2xl px-5 py-2',
   }
 
-  const display = showSign && positive ? `+${points}` : `${points}`
+  const display = positive
+    ? `${showSign ? '+' : ''}${points}`
+    : `−${Math.abs(points)}`
 
   return (
     <span className={cn(
-      'inline-flex items-center justify-center rounded-full font-black border-b-4 shadow-sm',
+      'inline-flex items-center justify-center rounded-full font-black tabular-nums flex-none',
       positive
-        ? 'bg-green-400 text-white border-green-600'
-        : 'bg-red-400 text-white border-red-600',
+        ? 'bg-positive-soft text-positive-ink'
+        : 'bg-negative-soft text-negative-ink',
       sizes[size]
     )}>
       {display}

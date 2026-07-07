@@ -10,7 +10,7 @@ import { Select } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
 import { Badge } from '@/components/ui/Badge'
 import { Icon } from '@/components/ui/Icon'
-import { MonsterAvatar } from '@/components/MonsterAvatar'
+import { AvatarDisc } from '@/components/MonsterAvatar'
 import { Confetti } from '@/components/Confetti'
 import { LoadingState } from '@/components/ui/LoadingState'
 import { getGroupMembers, getMemberRole } from '@/lib/data/members'
@@ -266,48 +266,47 @@ export default function AdminPage() {
 
   if (isAdmin === false) {
     return (
-      <div className="flex flex-col items-center gap-4 pt-16 text-center">
-        <span className="text-6xl">🚫</span>
-        <h2 className="text-2xl font-black text-red-700">Access Denied</h2>
-        <p className="text-gray-500">Only admins can access this page.</p>
-        <Button onClick={() => router.back()} variant="secondary">Go Back</Button>
+      <div className="flex flex-col items-center gap-3 pt-16 text-center">
+        <h2 className="font-display font-bold text-2xl text-ink">Admins only</h2>
+        <p className="text-[13px] font-bold text-muted">Only admins can access this page.</p>
+        <Button onClick={() => router.back()} variant="secondary">Go back</Button>
       </div>
     )
   }
 
-  const tabs: { id: AdminTab; label: string; emoji: string }[] = [
-    { id: 'points', label: 'Points', emoji: '⭐' },
-    { id: 'rewards', label: 'Rewards', emoji: '🎁' },
-    { id: 'challenges', label: 'Quests', emoji: '⚔️' },
-    { id: 'members', label: 'Members', emoji: '👥' },
-    { id: 'activity', label: 'Activity', emoji: '📋' },
+  const tabs: { id: AdminTab; label: string }[] = [
+    { id: 'points', label: 'Points' },
+    { id: 'rewards', label: 'Rewards' },
+    { id: 'challenges', label: 'Quests' },
+    { id: 'members', label: 'Members' },
+    { id: 'activity', label: 'Activity' },
   ]
 
   const pendingRedemptions = redemptions.filter(r => r.status === 'pending')
   const pendingSubmissions = submissions.filter(s => s.status === 'pending')
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <Confetti trigger={confetti} onComplete={() => setConfetti(false)} />
 
-      <PageHeader title="Admin Panel" emoji="👑" subtitle="You run this dojo." />
+      <PageHeader title="Admin panel" subtitle="You run this dojo" />
 
       {/* Tab bar */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl overflow-x-auto">
+      <div className="flex gap-1 bg-shell p-1 rounded-full overflow-x-auto">
         {tabs.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex-shrink-0 flex items-center gap-1 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
-              tab === t.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            className={`flex-shrink-0 flex items-center gap-1.5 py-2 px-3.5 rounded-full text-xs font-black transition-all cursor-pointer ${
+              tab === t.id ? 'bg-white text-primary shadow-[0_2px_6px_rgba(0,0,0,0.08)]' : 'text-muted hover:text-body'
             }`}
           >
-            {t.emoji} {t.label}
+            {t.label}
             {t.id === 'rewards' && pendingRedemptions.length > 0 && (
-              <span className="bg-red-500 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">{pendingRedemptions.length}</span>
+              <span className="bg-negative-soft text-negative-ink rounded-full min-w-4 h-4 px-1 text-[10px] font-black flex items-center justify-center">{pendingRedemptions.length}</span>
             )}
             {t.id === 'challenges' && pendingSubmissions.length > 0 && (
-              <span className="bg-red-500 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">{pendingSubmissions.length}</span>
+              <span className="bg-negative-soft text-negative-ink rounded-full min-w-4 h-4 px-1 text-[10px] font-black flex items-center justify-center">{pendingSubmissions.length}</span>
             )}
           </button>
         ))}
@@ -316,15 +315,13 @@ export default function AdminPage() {
       {/* POINTS TAB */}
       {tab === 'points' && (
         <AdminActionCard
-          title="Award / Remove Points"
+          title="Award or remove points"
           description="Choose a member, category, and amount."
-          emoji="⭐"
-          color="bg-purple-50 border-purple-200"
         >
           {awardMsg && (
-            <div className={`p-3 rounded-xl border-2 text-sm font-bold ${awardMsg.includes('Error') ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'}`}>
-              {awardMsg}
-              <Button variant="ghost" size="sm" onClick={() => setAwardMsg('')} className="ml-2">✕</Button>
+            <div className={`p-3 rounded-[14px] text-[13px] font-extrabold flex items-center gap-2 ${awardMsg.includes('Error') ? 'bg-negative-soft text-negative-ink' : 'bg-positive-soft text-positive-ink'}`}>
+              <span className="flex-1">{awardMsg}</span>
+              <button type="button" onClick={() => setAwardMsg('')} aria-label="Dismiss" className="font-black cursor-pointer px-1.5">✕</button>
             </div>
           )}
           <form onSubmit={handleAwardPoints} className="flex flex-col gap-3">
@@ -381,7 +378,7 @@ export default function AdminPage() {
             />
 
             <Button type="submit" loading={awardLoading} size="lg" className="w-full">
-              {parseInt(awardAmount) < 0 ? '😈 Remove Points' : '🎉 Award Points!'}
+              {parseInt(awardAmount) < 0 ? 'Remove points' : 'Award points'}
             </Button>
           </form>
         </AdminActionCard>
@@ -391,34 +388,33 @@ export default function AdminPage() {
       {tab === 'rewards' && (
         <div className="flex flex-col gap-4">
           <AdminActionCard
-            title="Create Reward"
+            title="Create reward"
             description="Add a new reward members can redeem."
-            emoji="🎁"
-            color="bg-pink-50 border-pink-200"
           >
             <form onSubmit={handleCreateReward} className="flex flex-col gap-3">
               <Input label="Title" placeholder="Pick the Movie" value={rewardTitle} onChange={e => setRewardTitle(e.target.value)} required />
               <Textarea label="Description" placeholder="What does this reward get you?" value={rewardDesc} onChange={e => setRewardDesc(e.target.value)} rows={2} />
               <Input label="Point Cost" type="number" placeholder="20" value={rewardCost} onChange={e => setRewardCost(e.target.value)} required />
-              <Button type="submit" loading={rewardLoading} className="w-full">✅ Create Reward</Button>
+              <Button type="submit" loading={rewardLoading} className="w-full">Create reward</Button>
             </form>
           </AdminActionCard>
 
           {pendingRedemptions.length > 0 && (
-            <AdminActionCard title="Pending Redemptions" description="Approve or deny member requests." emoji="⏳" color="bg-yellow-50 border-yellow-200">
+            <AdminActionCard title="Needs review" description="Approve or deny redemption requests.">
               <div className="flex flex-col gap-2">
                 {pendingRedemptions.map(r => (
-                  <div key={r.id} className="bg-white rounded-xl p-3 border border-yellow-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <MonsterAvatar name={r.profile?.display_name ?? 'Unknown'} size="xs" />
-                      <div>
-                        <p className="text-xs font-black text-gray-800">{r.profile?.display_name}</p>
-                        <p className="text-xs text-gray-500">wants: {r.reward?.title}</p>
+                  <div key={r.id} className="rounded-[18px] p-3.5 bg-canvas">
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <AvatarDisc name={r.profile?.display_name ?? 'Unknown'} size="xs" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] font-black text-ink truncate">{r.profile?.display_name} wants “{r.reward?.title}”</p>
+                        <p className="text-xs font-bold text-muted">Reward redemption</p>
                       </div>
+                      <span className="bg-primary-soft text-primary-dark rounded-full px-2.5 py-1 font-black text-xs tabular-nums flex-none">−{r.reward?.cost}</span>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="success" size="sm" className="flex-1" onClick={() => handleRedemptionStatus(r.id, 'approved')}>✅ Approve</Button>
-                      <Button variant="danger" size="sm" className="flex-1" onClick={() => handleRedemptionStatus(r.id, 'denied')}>❌ Deny</Button>
+                      <Button size="sm" className="flex-1" onClick={() => handleRedemptionStatus(r.id, 'approved')}>Approve</Button>
+                      <Button variant="danger" size="sm" className="flex-1" onClick={() => handleRedemptionStatus(r.id, 'denied')}>Reject</Button>
                     </div>
                   </div>
                 ))}
@@ -427,15 +423,15 @@ export default function AdminPage() {
           )}
 
           <div>
-            <h3 className="font-bold text-gray-900 mb-2">All Rewards ({rewards.length})</h3>
+            <h3 className="font-display font-bold text-base text-ink mb-2">All rewards ({rewards.length})</h3>
             {rewardMsg && (
-              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-2 mb-2 text-xs font-bold text-red-700">{rewardMsg}</div>
+              <div className="bg-negative-soft rounded-[14px] p-2.5 mb-2 text-xs font-extrabold text-negative-ink">{rewardMsg}</div>
             )}
             {rewards.length === 0 && (
-              <p className="text-sm text-gray-400 py-4 text-center">No rewards yet — create one above.</p>
+              <p className="text-[13px] font-bold text-muted py-4 text-center">No rewards yet — create one above.</p>
             )}
             {rewards.map(r => (
-              <div key={r.id} className="bg-white rounded-xl border border-purple-100 p-3 mb-2">
+              <div key={r.id} className="card p-3 mb-2">
                 {editReward?.id === r.id ? (
                   <form onSubmit={handleSaveReward} className="flex flex-col gap-2">
                     <Input label="Title" value={editReward.title} onChange={e => setEditReward({ ...editReward, title: e.target.value })} required />
@@ -449,8 +445,8 @@ export default function AdminPage() {
                 ) : (
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-bold text-sm truncate">{r.title}</p>
-                      <p className="text-xs text-gray-400">⭐ {r.cost} pts</p>
+                      <p className="font-extrabold text-sm text-ink truncate">{r.title}</p>
+                      <p className="text-xs font-bold text-muted tabular-nums">{r.cost} pts</p>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <Badge variant={r.active ? 'green' : 'gray'}>{r.active ? 'Active' : 'Inactive'}</Badge>
@@ -474,37 +470,34 @@ export default function AdminPage() {
       {tab === 'challenges' && (
         <div className="flex flex-col gap-4">
           <AdminActionCard
-            title="Create Challenge"
+            title="Create challenge"
             description="Add a new quest for members to complete."
-            emoji="⚔️"
-            color="bg-blue-50 border-blue-200"
           >
             <form onSubmit={handleCreateChallenge} className="flex flex-col gap-3">
               <Input label="Title" placeholder="Send a voice memo" value={challengeTitle} onChange={e => setChallengeTitle(e.target.value)} required />
               <Textarea label="Description" placeholder="What do they need to do?" value={challengeDesc} onChange={e => setChallengeDesc(e.target.value)} rows={2} />
               <Input label="Points Reward" type="number" placeholder="10" value={challengePoints} onChange={e => setChallengePoints(e.target.value)} required />
               <Input label="Due Date (optional)" type="date" value={challengeDue} onChange={e => setChallengeDue(e.target.value)} />
-              <Button type="submit" loading={challengeLoading} className="w-full">⚔️ Create Challenge</Button>
+              <Button type="submit" loading={challengeLoading} className="w-full">Create challenge</Button>
             </form>
           </AdminActionCard>
 
           {pendingSubmissions.length > 0 && (
-            <AdminActionCard title="Pending Submissions" description="Review challenge submissions." emoji="📬" color="bg-yellow-50 border-yellow-200">
+            <AdminActionCard title="Needs review" description="Review challenge submissions.">
               <div className="flex flex-col gap-2">
                 {pendingSubmissions.map(s => (
-                  <div key={s.id} className="bg-white rounded-xl p-3 border border-yellow-200">
-                    <div className="flex items-center gap-2 mb-1">
-                      <MonsterAvatar name={s.profile?.display_name ?? 'Unknown'} size="xs" />
-                      <div>
-                        <p className="text-xs font-black text-gray-800">{s.profile?.display_name}</p>
-                        <p className="text-xs text-gray-500">{s.challenge?.title}</p>
+                  <div key={s.id} className="rounded-[18px] p-3.5 bg-canvas">
+                    <div className="flex items-center gap-2.5 mb-1">
+                      <AvatarDisc name={s.profile?.display_name ?? 'Unknown'} size="xs" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] font-black text-ink truncate">{s.profile?.display_name} · {s.challenge?.title}</p>
+                        {s.proof_text && <p className="text-xs font-bold text-[#6B7280] truncate">&ldquo;{s.proof_text}&rdquo;</p>}
                       </div>
-                      <span className="ml-auto text-xs font-bold text-purple-600">+{s.challenge?.points} pts</span>
+                      <span className="bg-positive-soft text-positive-ink rounded-full px-2.5 py-1 font-black text-xs tabular-nums flex-none">+{s.challenge?.points}</span>
                     </div>
-                    {s.proof_text && <p className="text-xs text-gray-600 italic mb-2">&ldquo;{s.proof_text}&rdquo;</p>}
-                    <div className="flex gap-2">
-                      <Button variant="success" size="sm" className="flex-1" onClick={() => handleSubmissionStatus(s, 'approved')}>✅ Approve</Button>
-                      <Button variant="danger" size="sm" className="flex-1" onClick={() => handleSubmissionStatus(s, 'denied')}>❌ Deny</Button>
+                    <div className="flex gap-2 mt-2.5">
+                      <Button size="sm" className="flex-1" onClick={() => handleSubmissionStatus(s, 'approved')}>Approve</Button>
+                      <Button variant="danger" size="sm" className="flex-1" onClick={() => handleSubmissionStatus(s, 'denied')}>Reject</Button>
                     </div>
                   </div>
                 ))}
@@ -513,15 +506,15 @@ export default function AdminPage() {
           )}
 
           <div>
-            <h3 className="font-bold text-gray-900 mb-2">All Challenges ({challenges.length})</h3>
+            <h3 className="font-display font-bold text-base text-ink mb-2">All challenges ({challenges.length})</h3>
             {challengeMsg && (
-              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-2 mb-2 text-xs font-bold text-red-700">{challengeMsg}</div>
+              <div className="bg-negative-soft rounded-[14px] p-2.5 mb-2 text-xs font-extrabold text-negative-ink">{challengeMsg}</div>
             )}
             {challenges.length === 0 && (
-              <p className="text-sm text-gray-400 py-4 text-center">No challenges yet — create one above.</p>
+              <p className="text-[13px] font-bold text-muted py-4 text-center">No challenges yet — create one above.</p>
             )}
             {challenges.map(c => (
-              <div key={c.id} className="bg-white rounded-xl border border-purple-100 p-3 mb-2">
+              <div key={c.id} className="card p-3 mb-2">
                 {editChallenge?.id === c.id ? (
                   <form onSubmit={handleSaveChallenge} className="flex flex-col gap-2">
                     <Input label="Title" value={editChallenge.title} onChange={e => setEditChallenge({ ...editChallenge, title: e.target.value })} required />
@@ -536,8 +529,8 @@ export default function AdminPage() {
                 ) : (
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-bold text-sm truncate">{c.title}</p>
-                      <p className="text-xs text-gray-400">✨ {c.points} pts{c.due_date ? ` · due ${c.due_date.slice(0, 10)}` : ''}</p>
+                      <p className="font-extrabold text-sm text-ink truncate">{c.title}</p>
+                      <p className="text-xs font-bold text-muted tabular-nums">{c.points} pts{c.due_date ? ` · due ${c.due_date.slice(0, 10)}` : ''}</p>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <Badge variant={c.active ? 'green' : 'gray'}>{c.active ? 'Active' : 'Inactive'}</Badge>
@@ -560,22 +553,29 @@ export default function AdminPage() {
       {/* MEMBERS TAB */}
       {tab === 'members' && (
         <div className="flex flex-col gap-4">
-          {inviteCode && (
-            <AdminActionCard title="Invite Code" description="Share this with friends to join the group." emoji="🔑" color="bg-green-50 border-green-200">
-              <div className="bg-white rounded-xl border border-green-200 p-4 text-center">
-                <p className="text-3xl font-black tracking-widest text-green-700">{inviteCode}</p>
+          <div className="grid grid-cols-2 gap-2.5">
+            {inviteCode && (
+              <div className="card p-3.5">
+                <p className="text-[11px] font-extrabold text-muted tracking-wide">INVITE CODE</p>
+                <p className="font-display font-bold text-xl text-primary tracking-[0.06em] mt-0.5">{inviteCode}</p>
               </div>
-            </AdminActionCard>
-          )}
+            )}
+            <div className="card p-3.5">
+              <p className="text-[11px] font-extrabold text-muted tracking-wide">MEMBERS</p>
+              <p className="font-display font-bold text-xl text-ink mt-0.5">
+                {members.length}
+                <span className="text-xs font-sans font-bold text-muted"> · {members.filter(m => !m.user_id).length} unclaimed</span>
+              </p>
+            </div>
+          </div>
 
-          <div>
-            <h3 className="font-bold text-gray-900 mb-2">Members ({members.length})</h3>
+          <div className="card px-4 py-1.5">
             {members.map(m => (
-              <div key={m.id} className="bg-white rounded-xl border border-purple-100 p-3 mb-2 flex items-center gap-2">
-                <MonsterAvatar name={m.avatar_seed || m.display_name} size="xs" />
+              <div key={m.id} className="flex items-center gap-3 py-2.5 border-b border-hairline last:border-0">
+                <AvatarDisc name={m.avatar_seed || m.display_name} size="xs" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm truncate">{m.display_name}</p>
-                  <p className="text-xs text-gray-400">{m.user_id ? m.profile?.email : 'Unclaimed roster member'}</p>
+                  <p className="font-extrabold text-sm text-ink truncate">{m.display_name}</p>
+                  <p className="text-xs font-bold text-muted truncate">{m.user_id ? m.profile?.email : 'Unclaimed roster member'}</p>
                 </div>
                 <Badge variant={m.role === 'admin' ? 'purple' : 'gray'}>{m.role}</Badge>
               </div>
@@ -587,31 +587,31 @@ export default function AdminPage() {
       {/* ACTIVITY TAB */}
       {tab === 'activity' && (
         <div>
-          <h3 className="font-bold text-gray-900 mb-3">Recent Activity</h3>
-          <div className="bg-white rounded-2xl border-2 border-purple-100 px-4">
+          <h3 className="font-display font-bold text-base text-ink mb-2.5">Recent activity</h3>
+          <div className="card px-4 py-1.5">
             {activity.length === 0 ? (
-              <div className="py-8 text-center text-gray-400 text-sm">No activity yet</div>
+              <p className="py-8 text-center text-[13px] font-bold text-muted">No activity yet</p>
             ) : (
               activity.map(event => (
-                <div key={event.id} className="flex items-center gap-3 py-3 border-b border-purple-50 last:border-0">
-                  <MonsterAvatar name={event.member?.display_name ?? 'Unknown'} size="xs" />
+                <div key={event.id} className="flex items-center gap-3 py-3 border-b border-hairline last:border-0">
+                  <AvatarDisc name={event.member?.avatar_seed || event.member?.display_name || 'Unknown'} size="xs" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-gray-800 truncate">
-                      {event.member?.display_name} · {event.category?.emoji} {event.reason}
+                    <p className="text-[13px] font-extrabold text-ink truncate">
+                      {event.member?.display_name} · {event.reason}
                     </p>
-                    <p className="text-xs text-gray-400">{formatRelativeTime(event.created_at)}</p>
+                    <p className="text-[11.5px] font-bold text-muted">{formatRelativeTime(event.created_at)}</p>
                   </div>
-                  <span className={`text-sm font-black ${event.amount >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                    {event.amount >= 0 ? '+' : ''}{event.amount}
+                  <span className={`inline-flex items-center justify-center rounded-full font-black tabular-nums text-xs px-2.5 py-1 flex-none ${event.amount >= 0 ? 'bg-positive-soft text-positive-ink' : 'bg-negative-soft text-negative-ink'}`}>
+                    {event.amount >= 0 ? '+' : '−'}{Math.abs(event.amount)}
                   </span>
                   {isSupabaseConfigured() && (
                     <button
                       type="button"
                       onClick={() => handleUndoEvent(event.id)}
                       title="Undo this point event"
-                      className="text-xs font-bold text-purple-500 hover:text-purple-700 hover:bg-purple-50 rounded-lg px-2 py-1 cursor-pointer"
+                      className="text-xs font-black text-primary hover:text-primary-dark hover:bg-primary-soft rounded-full px-2.5 py-1 cursor-pointer"
                     >
-                      ↩ Undo
+                      Undo
                     </button>
                   )}
                 </div>

@@ -6,7 +6,6 @@ import { RewardCard } from '@/components/RewardCard'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { LoadingState } from '@/components/ui/LoadingState'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { Button } from '@/components/ui/Button'
 import { Confetti } from '@/components/Confetti'
 import { Badge } from '@/components/ui/Badge'
 import { getRewards, getRedemptions } from '@/lib/data/rewards'
@@ -76,31 +75,37 @@ export default function RewardsPage() {
   if (loading) return <LoadingState />
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <Confetti trigger={confetti} onComplete={() => setConfetti(false)} />
 
       <PageHeader
         title="Rewards"
-        emoji="🎁"
-        subtitle={`You have ${userPoints} points to spend`}
+        subtitle="Spend your points on squad-approved perks"
+        action={
+          <span className="bg-primary-soft text-primary-dark rounded-full px-3.5 py-1.5 font-black text-[13px] tabular-nums">
+            {userPoints} pts
+          </span>
+        }
       />
 
       {successMsg && (
-        <div className="bg-green-50 border-2 border-green-300 rounded-2xl p-3">
-          <p className="text-sm font-bold text-green-700">{successMsg}</p>
-          <Button variant="ghost" size="sm" onClick={() => setSuccessMsg('')} className="mt-1">Dismiss</Button>
+        <div className="bg-positive-soft rounded-[18px] p-3.5 flex items-center gap-3">
+          <p className="flex-1 text-[13px] font-extrabold text-positive-ink">{successMsg}</p>
+          <button onClick={() => setSuccessMsg('')} aria-label="Dismiss" className="text-positive-ink font-black text-sm cursor-pointer px-2">✕</button>
         </div>
       )}
 
       {errorMsg && (
-        <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-3">
-          <p className="text-sm font-bold text-red-700">{errorMsg}</p>
-          <Button variant="ghost" size="sm" onClick={() => setErrorMsg('')} className="mt-1">Dismiss</Button>
+        <div className="bg-negative-soft rounded-[18px] p-3.5 flex items-center gap-3">
+          <p className="flex-1 text-[13px] font-extrabold text-negative-ink">{errorMsg}</p>
+          <button onClick={() => setErrorMsg('')} aria-label="Dismiss" className="text-negative-ink font-black text-sm cursor-pointer px-2">✕</button>
         </div>
       )}
 
       {rewards.length === 0 ? (
-        <EmptyState emoji="🎁" title="No rewards yet!" description="Admins can add rewards in the admin panel." />
+        <div className="card">
+          <EmptyState title="No rewards yet" description="Admins can add rewards in the admin panel." />
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
           {rewards.map(reward => (
@@ -117,16 +122,16 @@ export default function RewardsPage() {
 
       {myRedemptions.length > 0 && (
         <div>
-          <h3 className="font-black text-purple-900 mb-3">📜 My Redemptions</h3>
-          <div className="flex flex-col gap-2">
+          <h3 className="font-display font-bold text-lg text-ink mt-2 mb-2.5">Redemption history</h3>
+          <div className="card px-4 py-1.5">
             {myRedemptions.map(r => (
-              <div key={r.id} className="bg-white rounded-2xl border-2 border-purple-100 p-3 flex items-center justify-between gap-2">
-                <div>
-                  <p className="font-bold text-sm text-gray-800">{r.reward?.title ?? 'Unknown reward'}</p>
-                  <p className="text-xs text-gray-400">{formatRelativeTime(r.created_at)}</p>
+              <div key={r.id} className="flex items-center gap-3 py-3 border-b border-hairline last:border-0">
+                <div className="flex-1 min-w-0">
+                  <p className="font-extrabold text-[13px] text-ink truncate">{r.reward?.title ?? 'Unknown reward'}</p>
+                  <p className="text-[11.5px] font-bold text-muted">{formatRelativeTime(r.created_at)}</p>
                 </div>
                 <Badge variant={r.status === 'approved' ? 'green' : r.status === 'denied' ? 'red' : 'yellow'}>
-                  {r.status === 'approved' ? '✅ Approved' : r.status === 'denied' ? '❌ Denied' : '⏳ Pending'}
+                  {r.status === 'approved' ? 'Approved' : r.status === 'denied' ? 'Denied' : 'Pending'}
                 </Badge>
               </div>
             ))}

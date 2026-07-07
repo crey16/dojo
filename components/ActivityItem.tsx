@@ -1,4 +1,5 @@
-import { MonsterAvatar } from './MonsterAvatar'
+import { AvatarDisc } from './MonsterAvatar'
+import { PointBubble } from './PointBubble'
 import { formatRelativeTime } from '@/lib/utils'
 import type { PointEvent } from '@/lib/types'
 
@@ -12,30 +13,23 @@ export function ActivityItem({ event, onUndo }: ActivityItemProps) {
   const name = event.member?.display_name ?? 'Unknown'
 
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-purple-100 last:border-0">
-      <MonsterAvatar name={name} size="sm" mood={positive ? 'happy' : 'guilty'} />
+    <div className="flex items-center gap-3 py-3 border-b border-hairline last:border-0">
+      <AvatarDisc name={event.member?.avatar_seed || name} size="xs" mood={positive ? 'happy' : 'guilty'} />
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-sm text-gray-800 truncate">
-          {name}
+        <p className="font-extrabold text-[13.5px] text-ink truncate">
+          {name}{event.reason ? ` · ${event.reason}` : ''}
         </p>
-        <p className="text-xs text-gray-500 truncate">
-          {event.category?.emoji} {event.reason}
-        </p>
+        <p className="text-[11.5px] font-bold text-muted">{formatRelativeTime(event.created_at)}</p>
       </div>
-      <div className="flex flex-col items-end gap-0.5">
-        <span className={`text-sm font-black ${positive ? 'text-green-600' : 'text-red-500'}`}>
-          {positive ? '+' : ''}{event.amount}
-        </span>
-        <span className="text-xs text-gray-400">{formatRelativeTime(event.created_at)}</span>
-      </div>
+      <PointBubble points={event.amount} showSign />
       {onUndo && (
         <button
           type="button"
           onClick={onUndo}
           title="Undo this point event"
-          className="text-xs font-bold text-purple-500 hover:text-purple-700 hover:bg-purple-50 rounded-lg px-2 py-1 cursor-pointer"
+          className="text-xs font-black text-primary hover:text-primary-dark hover:bg-primary-soft rounded-full px-2.5 py-1 cursor-pointer"
         >
-          ↩ Undo
+          Undo
         </button>
       )}
     </div>

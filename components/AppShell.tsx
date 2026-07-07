@@ -15,6 +15,19 @@ interface AppShellProps {
   isDemoMode: boolean
 }
 
+function DojoLogo({ size = 38 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true" className="rounded-xl flex-none">
+      <rect width="100" height="100" rx="26" fill="#7C3AED" />
+      <circle cx="38" cy="42" r="10" fill="#FFFFFF" />
+      <circle cx="40" cy="43" r="4.5" fill="#1F2937" />
+      <circle cx="62" cy="42" r="10" fill="#FFFFFF" />
+      <circle cx="64" cy="43" r="4.5" fill="#1F2937" />
+      <path d="M36 64 Q50 76 64 64" fill="none" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function AppShell({ children, groupId, groupName, isAdmin, isDemoMode }: AppShellProps) {
   const pathname = usePathname()
   const base = `/groups/${groupId}`
@@ -22,70 +35,96 @@ export function AppShell({ children, groupId, groupName, isAdmin, isDemoMode }: 
   const navLinks: { href: string; label: string; icon: IconName }[] = [
     { href: `${base}/dashboard`, label: 'Home', icon: 'home' },
     { href: `${base}/leaderboard`, label: 'Leaderboard', icon: 'trophy' },
-    { href: `${base}/challenges`, label: 'Challenges', icon: 'target' },
-    { href: `${base}/rewards`, label: 'Rewards', icon: 'gift' },
     { href: `${base}/members`, label: 'Members', icon: 'users' },
-    ...(isAdmin ? [{ href: `${base}/admin`, label: 'Admin', icon: 'crown' as IconName }] : []),
+    { href: `${base}/challenges`, label: 'Challenges', icon: 'flag' },
+    { href: `${base}/rewards`, label: 'Rewards', icon: 'gift' },
   ]
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-canvas">
       {isDemoMode && <DemoModeBanner />}
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:fixed lg:inset-y-0 lg:w-56 lg:flex-col">
-        <div className="flex flex-col flex-1 bg-white border-r border-gray-200 overflow-y-auto">
-          <div className="p-5 border-b border-gray-100">
-            <Link href={`${base}/dashboard`} className="flex items-center gap-3">
-              <span className="text-2xl">🥋</span>
-              <div>
-                <p className="font-bold text-gray-900 leading-tight">HCWK Dojo</p>
-                <p className="text-gray-400 text-xs">{groupName ?? 'Loading...'}</p>
-              </div>
-            </Link>
-          </div>
-          <nav className="p-3 flex flex-col gap-0.5">
+      <div className="hidden lg:flex lg:fixed lg:inset-y-0 lg:w-[232px] lg:flex-col">
+        <div className="flex flex-col flex-1 bg-white border-r border-[#F0EDE6] overflow-y-auto px-3.5 pt-5 pb-4 gap-1">
+          <Link href={`${base}/dashboard`} className="flex items-center gap-2.5 px-2 pb-4">
+            <DojoLogo />
+            <div>
+              <p className="font-display font-bold text-lg leading-none text-ink">HCWK Dojo</p>
+              <p className="text-[11px] font-bold text-muted mt-0.5">{groupName ?? 'Holy Chat Without Kaison'}</p>
+            </div>
+          </Link>
+          <nav className="flex flex-col gap-1">
             {navLinks.map(link => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold text-sm transition-colors',
+                  'flex items-center gap-3 px-3 py-[11px] rounded-[14px] font-extrabold text-[13.5px] transition-colors',
                   pathname === link.href
-                    ? 'bg-violet-50 text-violet-700'
-                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
+                    ? 'bg-primary-soft text-primary'
+                    : 'text-[#6B7280] hover:bg-canvas hover:text-body'
                 )}
               >
-                <Icon name={link.icon} size={18} />
+                <Icon name={link.icon} size={20} className="stroke-[2.2]" />
                 {link.label}
               </Link>
             ))}
           </nav>
-          <div className="mt-auto p-3 border-t border-gray-100">
-            <Link href="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">
-              <Icon name="settings" size={18} /> Settings
+          <div className="flex-1" />
+          {isAdmin && (
+            <Link
+              href={`${base}/admin`}
+              className={cn(
+                'flex items-center gap-3 px-3 py-[11px] rounded-[14px] font-extrabold text-[13.5px] transition-colors',
+                pathname === `${base}/admin`
+                  ? 'bg-primary-soft text-primary'
+                  : 'text-[#6B7280] hover:bg-canvas hover:text-body'
+              )}
+            >
+              <Icon name="shield" size={20} className="stroke-[2.2]" />
+              Admin panel
             </Link>
-          </div>
+          )}
+          <Link
+            href="/settings"
+            className="flex items-center gap-3 px-3 py-[11px] rounded-[14px] font-extrabold text-[13.5px] text-[#6B7280] hover:bg-canvas hover:text-body transition-colors"
+          >
+            <Icon name="settings" size={20} className="stroke-[2.2]" />
+            Settings
+          </Link>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-56 flex flex-col flex-1">
+      <div className="lg:pl-[232px] flex flex-col flex-1">
         {/* Mobile header */}
-        <header className="lg:hidden sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <header className="lg:hidden sticky top-0 z-40 bg-canvas/95 backdrop-blur px-4 py-3 flex items-center justify-between">
           <Link href={`${base}/dashboard`} className="flex items-center gap-2">
-            <span className="text-xl">🥋</span>
-            <span className="font-bold text-gray-900">HCWK Dojo</span>
+            <DojoLogo size={30} />
+            <span className="font-display font-bold text-ink">HCWK Dojo</span>
           </Link>
-          <Link href="/settings" className="text-gray-400 hover:text-gray-600" aria-label="Settings">
-            <Icon name="settings" size={20} />
-          </Link>
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Link
+                href={`${base}/admin`}
+                aria-label="Admin panel"
+                className="w-[38px] h-[38px] rounded-full bg-white shadow-card flex items-center justify-center text-primary active:scale-95 transition-transform"
+              >
+                <Icon name="shield" size={18} className="stroke-[2.2]" />
+              </Link>
+            )}
+            <Link
+              href="/settings"
+              aria-label="Settings"
+              className="w-[38px] h-[38px] rounded-full bg-white shadow-card flex items-center justify-center text-[#6B7280] active:scale-95 transition-transform"
+            >
+              <Icon name="settings" size={18} className="stroke-[2.2]" />
+            </Link>
+          </div>
         </header>
 
-        <main className={cn(
-          'flex-1 p-4 pb-24 lg:pb-8 w-full',
-          pathname === `${base}/members` ? 'lg:p-0 max-w-none' : 'lg:p-8 max-w-2xl mx-auto'
-        )}>
+        <main className="flex-1 p-4 pb-28 lg:pb-10 w-full lg:p-8 max-w-[720px] mx-auto">
           {children}
         </main>
       </div>

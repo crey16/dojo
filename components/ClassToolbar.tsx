@@ -1,5 +1,8 @@
 'use client'
 
+import { Button } from './ui/Button'
+import { cn } from '@/lib/utils'
+
 interface ClassToolbarProps {
   isAdmin: boolean
   selecting: boolean
@@ -8,31 +11,21 @@ interface ClassToolbarProps {
   onReset: () => void
 }
 
-export function ClassToolbar({ isAdmin, selecting, onAdd, onToggleSelect, onReset }: ClassToolbarProps) {
-  const placeholders = [
-    ['⚙️', 'Settings'], ['📋', 'Attendance'], ['⏱️', 'Timer'], ['🎲', 'Random'],
-  ]
+export function ClassToolbar({ isAdmin, selecting, onAdd, onToggleSelect }: ClassToolbarProps) {
+  if (!isAdmin) return null
 
   return (
-    <div className="class-toolbar">
-      <div className="flex items-center gap-1 overflow-x-auto">
-        {placeholders.map(([emoji, label]) => (
-          <button key={label} className="class-tool" title={`${label} coming soon`}>
-            <span>{emoji}</span><span>{label}</span>
-          </button>
-        ))}
-        {isAdmin && (
-          <button className={`class-tool ${selecting ? 'class-tool-active' : ''}`} onClick={onToggleSelect}>
-            <span>☑️</span><span>{selecting ? 'Cancel Multiple' : 'Award Multiple'}</span>
-          </button>
+    <div className="flex items-center justify-end gap-2">
+      <button
+        className={cn(
+          'px-3.5 py-2 rounded-full text-xs font-black cursor-pointer transition-colors',
+          selecting ? 'bg-primary-soft text-primary-dark' : 'text-[#6B7280] hover:bg-shell'
         )}
-      </div>
-      {isAdmin && (
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button className="class-tool hidden sm:flex" onClick={onReset}><span>🧹</span><span>Reset bubbles</span></button>
-          <button className="class-add-button" onClick={onAdd}>+ Add Member</button>
-        </div>
-      )}
+        onClick={onToggleSelect}
+      >
+        {selecting ? 'Cancel multiple' : 'Award multiple'}
+      </button>
+      <Button size="sm" onClick={onAdd}>+ Add member</Button>
     </div>
   )
 }
