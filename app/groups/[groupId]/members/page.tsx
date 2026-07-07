@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ClassToolbar } from '@/components/ClassToolbar'
+import { CategoryIcon } from '@/components/CategoryIcon'
+import { Icon } from '@/components/ui/Icon'
 import { RosterMemberCard } from '@/components/RosterMemberCard'
 import { RosterModal } from '@/components/RosterModal'
 import { MonsterAvatar } from '@/components/MonsterAvatar'
@@ -271,7 +273,7 @@ export default function MembersPage() {
             : positive ? 'border-positive-soft hover:border-positive' : 'border-negative-soft hover:border-negative'
         }`}
       >
-        {category.emoji && <span className="text-xl">{category.emoji}</span>}
+        <CategoryIcon name={category.name} positive={positive} />
         <span className="font-black text-[12.5px] text-ink leading-snug">{category.name}</span>
         <span className={`rounded-full px-2.5 py-[3px] font-black text-xs tabular-nums ${
           positive ? 'bg-positive-soft text-positive-ink' : 'bg-negative-soft text-negative-ink'
@@ -380,7 +382,7 @@ export default function MembersPage() {
           <div className="flex flex-col items-center gap-2 mb-4">
             <MonsterAvatar name={selectedMember.avatar_seed} size="xl" mood="happy" />
             {selectedMember.user_id === currentUserId && (
-              <Button variant="ghost" size="sm" onClick={shuffleAvatar} loading={busy}>🎲 Shuffle avatar</Button>
+              <Button variant="ghost" size="sm" onClick={shuffleAvatar} loading={busy}><Icon name="dice" size={16} /> Shuffle avatar</Button>
             )}
           </div>
           {isAdmin ? (

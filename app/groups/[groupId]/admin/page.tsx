@@ -131,7 +131,7 @@ export default function AdminPage() {
 
     if (!error) {
       if (positive) setConfetti(true)
-      setAwardMsg(positive ? `✅ Good Job! +${amount} points awarded!` : `😬 Uh Oh! ${amount} points removed.`)
+      setAwardMsg(positive ? `+${amount} points awarded!` : `${amount} points removed.`)
       setAwardMember('')
       setAwardCategory('')
       setAwardAmount('')
@@ -139,14 +139,14 @@ export default function AdminPage() {
       const act = await getRecentActivity(groupId, 30)
       setActivity(act)
     } else {
-      setAwardMsg(`❌ Error: ${error}`)
+      setAwardMsg(`Error: ${error}`)
     }
     setAwardLoading(false)
   }
 
   async function handleUndoEvent(eventId: string) {
     const { error } = await undoPointEventAction(eventId)
-    if (error) setAwardMsg(`❌ Error: ${error}`)
+    if (error) setAwardMsg(`Error: ${error}`)
     else setActivity(await getRecentActivity(groupId, 30))
   }
 
@@ -351,12 +351,12 @@ export default function AdminPage() {
               <option value="">Custom / No category</option>
               <optgroup label="Positive">
                 {categories.filter(c => c.type === 'positive').map(c => (
-                  <option key={c.id} value={c.id}>{c.emoji} {c.name} ({c.default_points > 0 ? '+' : ''}{c.default_points})</option>
+                  <option key={c.id} value={c.id}>{c.name} ({c.default_points > 0 ? '+' : ''}{c.default_points})</option>
                 ))}
               </optgroup>
               <optgroup label="Negative">
                 {categories.filter(c => c.type === 'negative').map(c => (
-                  <option key={c.id} value={c.id}>{c.emoji} {c.name} ({c.default_points})</option>
+                  <option key={c.id} value={c.id}>{c.name} ({c.default_points})</option>
                 ))}
               </optgroup>
             </Select>

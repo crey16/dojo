@@ -22,6 +22,17 @@ const PATHS: Record<string, React.ReactNode> = {
   flag: <path d="M6 21V4M6 4.5c4-2 8 2 12 .5v9c-4 1.5-8-2.5-12-.5" />,
   shield: <path d="M12 3l7 3v5c0 5-3.5 8.2-7 9.5C8.5 19.2 5 16 5 11V6z" />,
   back: <path d="M15 5l-7 7 7 7" />,
+  flame: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z" />,
+  calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 11h18" /></>,
+  laugh: <><circle cx="12" cy="12" r="9" /><path d="M8 13a4 4 0 0 0 8 0H8Z" /><path d="M9 9h.01M15 9h.01" /></>,
+  heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />,
+  zap: <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" />,
+  meh: <><circle cx="12" cy="12" r="9" /><path d="M8 15h8" /><path d="M9 9h.01M15 9h.01" /></>,
+  feather: <><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5l6.74-6.76Z" /><path d="M16 8 2 22" /><path d="M17.5 15H9" /></>,
+  'thumbs-down': <><path d="M17 14V2" /><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" /></>,
+  ghost: <><path d="M9 10h.01M15 10h.01" /><path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8Z" /></>,
+  skull: <><circle cx="9" cy="12" r="1" /><circle cx="15" cy="12" r="1" /><path d="M8 20v2h8v-2" /><path d="m12.5 17-.5-1-.5 1h1Z" /><path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20" /></>,
+  dice: <><rect x="3" y="3" width="18" height="18" rx="4" /><path d="M8 8h.01M16 8h.01M8 16h.01M16 16h.01M12 12h.01" /></>,
 }
 
 export type IconName = keyof typeof PATHS

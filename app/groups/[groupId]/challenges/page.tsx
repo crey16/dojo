@@ -59,7 +59,7 @@ export default function ChallengesPage() {
       setErrorMsg(error)
     } else {
       setErrorMsg('')
-      setSuccessMsg('🚀 Challenge submitted! Admin will review soon.')
+      setSuccessMsg('Challenge submitted! Admin will review soon.')
       const subs = await getSubmissions(groupId)
       setSubmissions(subs)
     }

@@ -63,7 +63,7 @@ export default function RewardsPage() {
     } else {
       setErrorMsg('')
       setConfetti(true)
-      setSuccessMsg(`🎉 Redemption submitted for "${reward.title}"! Wait for admin approval.`)
+      setSuccessMsg(`Redemption submitted for "${reward.title}" — waiting for admin approval.`)
       const redemps = await getRedemptions(groupId)
       setRedemptions(redemps)
     }
