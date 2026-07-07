@@ -15,6 +15,7 @@ export default async function RootPage() {
         .from('group_members')
         .select('group_id')
         .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
         .limit(1)
         .single()
       if (data) {

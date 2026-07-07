@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { MobileNav } from './MobileNav'
+import { GroupSwitcher } from './GroupSwitcher'
 import { DemoModeBanner } from './DemoModeBanner'
 import { cn } from '@/lib/utils'
 import { Icon, type IconName } from './ui/Icon'
@@ -47,13 +48,7 @@ export function AppShell({ children, groupId, groupName, isAdmin, isDemoMode }: 
       {/* Desktop sidebar */}
       <div className="hidden lg:flex lg:fixed lg:inset-y-0 lg:w-[232px] lg:flex-col">
         <div className="flex flex-col flex-1 bg-white border-r border-[#F0EDE6] overflow-y-auto px-3.5 pt-5 pb-4 gap-1">
-          <Link href={`${base}/dashboard`} className="flex items-center gap-2.5 px-2 pb-4">
-            <DojoLogo />
-            <div>
-              <p className="font-display font-bold text-lg leading-none text-ink">HCWK Dojo</p>
-              <p className="text-[11px] font-bold text-muted mt-0.5">{groupName ?? 'Holy Chat Without Kaison'}</p>
-            </div>
-          </Link>
+          <GroupSwitcher groupId={groupId} groupName={groupName} logo={<DojoLogo />} />
           <nav className="flex flex-col gap-1">
             {navLinks.map(link => (
               <Link
@@ -100,10 +95,7 @@ export function AppShell({ children, groupId, groupName, isAdmin, isDemoMode }: 
       <div className="lg:pl-[232px] flex flex-col flex-1">
         {/* Mobile header */}
         <header className="lg:hidden sticky top-0 z-40 bg-canvas/95 backdrop-blur px-4 py-3 flex items-center justify-between">
-          <Link href={`${base}/dashboard`} className="flex items-center gap-2">
-            <DojoLogo size={30} />
-            <span className="font-display font-bold text-ink">HCWK Dojo</span>
-          </Link>
+          <GroupSwitcher groupId={groupId} groupName={groupName} compact logo={<DojoLogo size={30} />} />
           <div className="flex items-center gap-2">
             {isAdmin && (
               <Link
