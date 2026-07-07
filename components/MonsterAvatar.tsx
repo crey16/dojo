@@ -53,12 +53,6 @@ export function MonsterAvatar({ name, size = 'md', mood = 'neutral', className =
 
   const blobPath = `M ${r},${r*0.3} C ${r*1.4},${r*0.1} ${r*1.8},${r*0.8} ${r*1.7},${r*1.3} C ${r*1.6},${r*1.8} ${r*1.1},${r*1.9} ${r*0.6},${r*1.8} C ${r*0.1},${r*1.7} ${r*-0.1},${r*1.1} ${r*0.1},${r*0.7} C ${r*0.2},${r*0.3} ${r*0.7},${r*0.4} ${r},${r*0.3} Z`
 
-  const faceSize = Math.round(s.blob * 0.55)
-  const faceX = (s.blob - faceSize) / 2
-  const faceY = s.blob * 0.28
-  const faceRx = faceSize * 0.45
-  const faceRy = faceSize * 0.35
-
   return (
     <div className={`relative inline-flex items-center justify-center flex-shrink-0 select-none ${s.container} ${className}`} title={name}>
       <svg
