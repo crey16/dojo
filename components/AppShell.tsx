@@ -47,7 +47,7 @@ export function AppShell({ children, groupId, groupName, isAdmin, isDemoMode }: 
 
       {/* Desktop sidebar */}
       <div className="hidden lg:flex lg:fixed lg:inset-y-0 lg:w-[232px] lg:flex-col">
-        <div className="flex flex-col flex-1 bg-white border-r border-[#F0EDE6] overflow-y-auto px-3.5 pt-5 pb-4 gap-1">
+        <div className="flex flex-col flex-1 bg-white border-r border-[#F0EDE6] px-3.5 pt-5 pb-4 gap-1">
           <GroupSwitcher groupId={groupId} groupName={groupName} logo={<DojoLogo />} />
           <nav className="flex flex-col gap-1">
             {navLinks.map(link => (
