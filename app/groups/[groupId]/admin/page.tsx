@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/Badge'
 import { Icon } from '@/components/ui/Icon'
 import { AvatarDisc } from '@/components/MonsterAvatar'
 import { Confetti } from '@/components/Confetti'
+import { CategoryIcon } from '@/components/CategoryIcon'
+import { PointBubble } from '@/components/PointBubble'
 import { LoadingState } from '@/components/ui/LoadingState'
 import { getGroupMembers, getMemberRole } from '@/lib/data/members'
 import { getPointCategories, getRecentActivity } from '@/lib/data/points'
@@ -20,7 +22,7 @@ import { getChallenges, getSubmissions } from '@/lib/data/challenges'
 import { getCurrentUserId } from '@/lib/data/auth'
 import { getGroup } from '@/lib/data/groups'
 import { isSupabaseConfigured } from '@/lib/supabase/config'
-import { awardPointsAction, undoPointEventAction } from '@/app/actions/points'
+import { awardPointsAction, undoPointEventAction, createCategoryAction, updateCategoryAction, deleteCategoryAction } from '@/app/actions/points'
 import { createRewardAction, updateRewardAction, deleteRewardAction, updateRedemptionStatusAction } from '@/app/actions/rewards'
 import { createChallengeAction, updateChallengeAction, deleteChallengeAction, updateSubmissionStatusAction } from '@/app/actions/challenges'
 import { formatRelativeTime } from '@/lib/utils'
@@ -79,6 +81,14 @@ export default function AdminPage() {
 
   // Invite code
   const [inviteCode, setInviteCode] = useState('')
+
+  // Category management state
+  const [catName, setCatName] = useState('')
+  const [catPoints, setCatPoints] = useState('')
+  const [catBusy, setCatBusy] = useState(false)
+  const [catMsg, setCatMsg] = useState('')
+  const [editCat, setEditCat] = useState<PointCategory | null>(null)
+  const [confirmDeleteCat, setConfirmDeleteCat] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -148,6 +158,51 @@ export default function AdminPage() {
     const { error } = await undoPointEventAction(eventId)
     if (error) setAwardMsg(`Error: ${error}`)
     else setActivity(await getRecentActivity(groupId, 30))
+  }
+
+  async function reloadCategories() {
+    setCategories(await getPointCategories(groupId))
+  }
+
+  async function handleCreateCategory(e: React.FormEvent) {
+    e.preventDefault()
+    setCatBusy(true)
+    setCatMsg('')
+    const { error } = isSupabaseConfigured()
+      ? await createCategoryAction(groupId, catName, parseInt(catPoints) || 0)
+      : { error: null }
+    if (error) setCatMsg(error)
+    else {
+      setCatName(''); setCatPoints('')
+      await reloadCategories()
+    }
+    setCatBusy(false)
+  }
+
+  async function handleSaveCategory(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editCat) return
+    setCatBusy(true)
+    setCatMsg('')
+    const { error } = isSupabaseConfigured()
+      ? await updateCategoryAction(editCat.id, editCat.name, editCat.default_points)
+      : { error: null }
+    if (error) setCatMsg(error)
+    else {
+      setEditCat(null)
+      await reloadCategories()
+    }
+    setCatBusy(false)
+  }
+
+  async function handleDeleteCategory(id: string) {
+    setCatMsg('')
+    setConfirmDeleteCat('')
+    const { error } = isSupabaseConfigured()
+      ? await deleteCategoryAction(id)
+      : { error: null }
+    if (error) setCatMsg(error)
+    else await reloadCategories()
   }
 
   async function handleCreateReward(e: React.FormEvent) {
@@ -314,6 +369,7 @@ export default function AdminPage() {
 
       {/* POINTS TAB */}
       {tab === 'points' && (
+        <div className="flex flex-col gap-4">
         <AdminActionCard
           title="Award or remove points"
           description="Choose a member, category, and amount."
@@ -382,6 +438,57 @@ export default function AdminPage() {
             </Button>
           </form>
         </AdminActionCard>
+
+        <AdminActionCard
+          title="Point categories"
+          description="The shortcuts everyone sees. Edit values, rename, or add your own — use negative points for penalties."
+        >
+          {catMsg && (
+            <div className="bg-negative-soft rounded-[14px] p-2.5 text-xs font-extrabold text-negative-ink">{catMsg}</div>
+          )}
+          <form onSubmit={handleCreateCategory} className="flex gap-2 items-end">
+            <div className="flex-1 min-w-0">
+              <Input label="New category" placeholder="e.g. Legendary Assist" value={catName} onChange={e => setCatName(e.target.value)} required />
+            </div>
+            <div className="w-24 flex-none">
+              <Input label="Points" type="number" placeholder="+5 / -3" value={catPoints} onChange={e => setCatPoints(e.target.value)} required />
+            </div>
+            <Button type="submit" loading={catBusy} className="flex-none">Add</Button>
+          </form>
+
+          <div>
+            {categories.map(c => (
+              <div key={c.id} className="py-2 border-b border-hairline last:border-0">
+                {editCat?.id === c.id ? (
+                  <form onSubmit={handleSaveCategory} className="flex gap-2 items-end py-1">
+                    <div className="flex-1 min-w-0">
+                      <Input label="Name" value={editCat.name} onChange={e => setEditCat({ ...editCat, name: e.target.value })} required />
+                    </div>
+                    <div className="w-24 flex-none">
+                      <Input label="Points" type="number" value={String(editCat.default_points)} onChange={e => setEditCat({ ...editCat, default_points: parseInt(e.target.value) || 0 })} required />
+                    </div>
+                    <Button type="submit" size="sm" loading={catBusy} className="flex-none">Save</Button>
+                    <Button type="button" size="sm" variant="ghost" className="flex-none" onClick={() => setEditCat(null)}>Cancel</Button>
+                  </form>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <CategoryIcon name={c.name} positive={c.default_points > 0} />
+                    <span className="flex-1 min-w-0 font-extrabold text-[13.5px] text-ink truncate">{c.name}</span>
+                    <PointBubble points={c.default_points} showSign />
+                    <Button variant="ghost" size="sm" onClick={() => { setConfirmDeleteCat(''); setEditCat(c) }} aria-label={`Edit ${c.name}`}><Icon name="edit" size={16} /></Button>
+                    {confirmDeleteCat === c.id ? (
+                      <Button variant="danger" size="sm" onClick={() => handleDeleteCategory(c.id)}>Really delete?</Button>
+                    ) : (
+                      <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteCat(c.id)} aria-label={`Delete ${c.name}`}><Icon name="trash" size={16} /></Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="text-[11.5px] font-bold text-muted">Deleting a category keeps everyone&apos;s past points — old events just lose the label.</p>
+        </AdminActionCard>
+        </div>
       )}
 
       {/* REWARDS TAB */}
