@@ -9,11 +9,12 @@ import { PointBubble } from '@/components/PointBubble'
 import { LoadingState } from '@/components/ui/LoadingState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Icon } from '@/components/ui/Icon'
+import { CategoryIcon } from '@/components/CategoryIcon'
 import { getCurrentUser, getCurrentUserId } from '@/lib/data/auth'
-import { getRecentActivity, getMemberTotalPoints, getLeaderboard } from '@/lib/data/points'
+import { getRecentActivity, getMemberTotalPoints, getLeaderboard, getPointCategories } from '@/lib/data/points'
 import { getLinkedMember, getMemberRole } from '@/lib/data/members'
 import { getChallenges } from '@/lib/data/challenges'
-import type { Profile, PointEvent, Challenge } from '@/lib/types'
+import type { Profile, PointEvent, Challenge, PointCategory } from '@/lib/types'
 import Link from 'next/link'
 
 export default function DashboardPage() {
@@ -26,6 +27,7 @@ export default function DashboardPage() {
   const [totalMembers, setTotalMembers] = useState(0)
   const [activity, setActivity] = useState<PointEvent[]>([])
   const [challenges, setChallenges] = useState<Challenge[]>([])
+  const [categories, setCategories] = useState<PointCategory[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -36,12 +38,13 @@ export default function DashboardPage() {
 
       if (userId) {
         const linkedMember = await getLinkedMember(groupId, userId)
-        const [userPoints, leaderboard, recentActivity, activeChallenges, role] = await Promise.all([
+        const [userPoints, leaderboard, recentActivity, activeChallenges, role, pointCategories] = await Promise.all([
           linkedMember ? getMemberTotalPoints(groupId, linkedMember.id) : Promise.resolve(0),
           getLeaderboard(groupId, 'all-time'),
           getRecentActivity(groupId, 10),
           getChallenges(groupId),
           getMemberRole(groupId, userId),
+          getPointCategories(groupId),
         ])
 
         setPoints(userPoints)
@@ -50,6 +53,7 @@ export default function DashboardPage() {
         setRank(entry?.rank ?? 0)
         setActivity(recentActivity)
         setChallenges(activeChallenges.filter(c => c.active))
+        setCategories(pointCategories)
         setIsAdmin(role === 'admin')
       }
 
@@ -65,6 +69,8 @@ export default function DashboardPage() {
   const featured = challenges.length > 0
     ? challenges.reduce((max, c) => (c.points > max.points ? c : max), challenges[0])
     : null
+  const earnCategories = categories.filter(c => c.default_points > 0)
+  const loseCategories = categories.filter(c => c.default_points <= 0)
 
   return (
     <div className="flex flex-col">
@@ -118,6 +124,30 @@ export default function DashboardPage() {
           </span>
           <PointBubble points={featured.points} showSign />
         </Link>
+      )}
+
+      {/* How points work (read-only reference for members) */}
+      {categories.length > 0 && (
+        <>
+          <h2 className="font-display font-bold text-lg text-ink mt-6 mb-2.5">How points work</h2>
+          <div className="card px-4 py-1.5">
+            {earnCategories.map(category => (
+              <div key={category.id} className="flex items-center gap-3 py-2.5 border-b border-hairline last:border-0">
+                <CategoryIcon name={category.name} positive />
+                <span className="flex-1 min-w-0 font-extrabold text-[13.5px] text-ink truncate">{category.name}</span>
+                <PointBubble points={category.default_points} showSign />
+              </div>
+            ))}
+            {loseCategories.map(category => (
+              <div key={category.id} className="flex items-center gap-3 py-2.5 border-b border-hairline last:border-0">
+                <CategoryIcon name={category.name} positive={false} />
+                <span className="flex-1 min-w-0 font-extrabold text-[13.5px] text-ink truncate">{category.name}</span>
+                <PointBubble points={category.default_points} showSign />
+              </div>
+            ))}
+          </div>
+          <p className="text-[11.5px] font-bold text-muted mt-2 px-1">Admins hand these out — behave accordingly.</p>
+        </>
       )}
 
       {/* Recent activity */}

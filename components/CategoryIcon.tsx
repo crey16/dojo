@@ -12,6 +12,7 @@ interface CategoryIconProps {
 // Keyword → icon for the default categories; custom categories fall back to a
 // deterministic pick from the matching pool (same name → same icon).
 const KEYWORDS: Array<[RegExp, IconName]> = [
+  [/ghost|ignore|read/i, 'ghost'],
   [/carr|chat|fire|streak/i, 'flame'],
   [/plan|hangout|date|meet/i, 'calendar'],
   [/funny|joke|meme|laugh/i, 'laugh'],
