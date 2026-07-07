@@ -28,6 +28,7 @@ export default function ChallengesPage() {
   const [proof, setProof] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -54,7 +55,10 @@ export default function ChallengesPage() {
       ? await submitChallengeAction(submitTarget.id, groupId, proof.trim())
       : { error: null }
 
-    if (!error) {
+    if (error) {
+      setErrorMsg(error)
+    } else {
+      setErrorMsg('')
       setSuccessMsg('🚀 Challenge submitted! Admin will review soon.')
       const subs = await getSubmissions(groupId)
       setSubmissions(subs)
@@ -79,6 +83,13 @@ export default function ChallengesPage() {
         <div className="bg-green-50 border-2 border-green-300 rounded-2xl p-3">
           <p className="text-sm font-bold text-green-700">{successMsg}</p>
           <Button variant="ghost" size="sm" onClick={() => setSuccessMsg('')} className="mt-1">Dismiss</Button>
+        </div>
+      )}
+
+      {errorMsg && (
+        <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-3">
+          <p className="text-sm font-bold text-red-700">{errorMsg}</p>
+          <Button variant="ghost" size="sm" onClick={() => setErrorMsg('')} className="mt-1">Dismiss</Button>
         </div>
       )}
 

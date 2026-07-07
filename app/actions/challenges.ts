@@ -31,42 +31,23 @@ export async function submitChallengeAction(
     status: 'pending',
     proof_text: proofText,
   })
+  // Partial unique index: one live submission per challenge per user
+  if (error?.code === '23505') return { error: 'You already submitted this challenge' }
   return { error: error?.message ?? null }
 }
 
 export async function updateSubmissionStatusAction(
   submissionId: string,
-  status: 'approved' | 'denied',
-  groupId: string,
-  submittedUserId: string,
-  points: number
+  status: 'approved' | 'denied'
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  const { error } = await supabase
-    .from('challenge_submissions')
-    .update({ status })
-    .eq('id', submissionId)
-
-  if (!error && status === 'approved') {
-    const { data: member } = await supabase
-      .from('group_members')
-      .select('id')
-      .eq('group_id', groupId)
-      .eq('user_id', submittedUserId)
-      .single()
-    if (member) {
-      await supabase.from('point_events').insert({
-        group_id: groupId,
-        member_id: member.id,
-        giver_id: user.id,
-        amount: points,
-        category_id: null,
-        reason: 'Challenge approved',
-      })
-    }
-  }
+  // Idempotent RPC: admin-checked, points come from the challenge row
+  const { error } = await supabase.rpc('review_submission', {
+    p_submission_id: submissionId,
+    p_approve: status === 'approved',
+  })
   return { error: error?.message ?? null }
 }

@@ -174,7 +174,7 @@ export default function AdminPage() {
   }
 
   async function handleSubmissionStatus(sub: ChallengeSubmission, status: 'approved' | 'denied') {
-    if (isSupabaseConfigured()) await updateSubmissionStatusAction(sub.id, status, groupId, sub.user_id, sub.challenge?.points ?? 0)
+    if (isSupabaseConfigured()) await updateSubmissionStatusAction(sub.id, status)
     const subs = await getSubmissions(groupId)
     setSubmissions(subs)
     if (status === 'approved') setConfetti(true)
@@ -390,7 +390,7 @@ export default function AdminPage() {
                       </div>
                       <span className="ml-auto text-xs font-bold text-purple-600">+{s.challenge?.points} pts</span>
                     </div>
-                    {s.proof_text && <p className="text-xs text-gray-600 italic mb-2">"{s.proof_text}"</p>}
+                    {s.proof_text && <p className="text-xs text-gray-600 italic mb-2">&ldquo;{s.proof_text}&rdquo;</p>}
                     <div className="flex gap-2">
                       <Button variant="success" size="sm" className="flex-1" onClick={() => handleSubmissionStatus(s, 'approved')}>✅ Approve</Button>
                       <Button variant="danger" size="sm" className="flex-1" onClick={() => handleSubmissionStatus(s, 'denied')}>❌ Deny</Button>

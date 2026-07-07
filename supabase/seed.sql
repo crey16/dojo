@@ -2,20 +2,8 @@
 -- Run AFTER schema.sql and policies.sql
 -- NOTE: This creates example data. Replace UUIDs with your actual user IDs.
 
--- Example: insert default categories into a group
--- Replace 'YOUR-GROUP-UUID' with your actual group ID after creating it
-
--- INSERT INTO public.point_categories (group_id, name, default_points, type, emoji) VALUES
---   ('YOUR-GROUP-UUID', 'Carried the Chat', 5, 'positive', '🔥'),
---   ('YOUR-GROUP-UUID', 'Actually Made Plans', 7, 'positive', '📅'),
---   ('YOUR-GROUP-UUID', 'Funny Message', 3, 'positive', '😂'),
---   ('YOUR-GROUP-UUID', 'Helped Someone', 5, 'positive', '🤝'),
---   ('YOUR-GROUP-UUID', 'Clutch Behavior', 8, 'positive', '💪'),
---   ('YOUR-GROUP-UUID', 'Dry Response', -2, 'negative', '🥱'),
---   ('YOUR-GROUP-UUID', 'Flaked', -7, 'negative', '🪶'),
---   ('YOUR-GROUP-UUID', 'Bad Take', -4, 'negative', '🗑'),
---   ('YOUR-GROUP-UUID', 'Ghosted the Chat', -5, 'negative', '👻'),
---   ('YOUR-GROUP-UUID', 'Unholy Behavior', -10, 'negative', '😈');
+-- Default point categories are created automatically when a group is made
+-- via the app (create_group_with_admin RPC in migrations/004) — no seed needed.
 
 -- Example rewards:
 -- INSERT INTO public.rewards (group_id, title, description, cost, active) VALUES

@@ -16,19 +16,14 @@ export async function createRewardAction(
 }
 
 export async function redeemRewardAction(
-  rewardId: string,
-  groupId: string
+  rewardId: string
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  const { error } = await supabase.from('reward_redemptions').insert({
-    reward_id: rewardId,
-    user_id: user.id,
-    group_id: groupId,
-    status: 'pending',
-  })
+  // RPC enforces active reward, membership, balance, and one pending request
+  const { error } = await supabase.rpc('redeem_reward', { p_reward_id: rewardId })
   return { error: error?.message ?? null }
 }
 
@@ -37,9 +32,13 @@ export async function updateRedemptionStatusAction(
   status: 'approved' | 'denied'
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const { error } = await supabase
-    .from('reward_redemptions')
-    .update({ status })
-    .eq('id', redemptionId)
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  // Idempotent RPC: admin-checked, deducts points on approval
+  const { error } = await supabase.rpc('review_redemption', {
+    p_redemption_id: redemptionId,
+    p_approve: status === 'approved',
+  })
   return { error: error?.message ?? null }
 }
