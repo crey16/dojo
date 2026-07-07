@@ -44,7 +44,7 @@ export async function signIn(email: string, password: string) {
 
 export async function signUp(email: string, password: string, displayName: string) {
   if (!isSupabaseConfigured()) {
-    return { error: null }
+    return { error: null, needsConfirmation: false }
   }
   const supabase = createClient()
   const { data, error } = await supabase.auth.signUp({
@@ -59,5 +59,6 @@ export async function signUp(email: string, password: string, displayName: strin
       display_name: displayName,
     })
   }
-  return { error }
+  // A session is returned only when email confirmation is disabled
+  return { error, needsConfirmation: !error && !data?.session }
 }

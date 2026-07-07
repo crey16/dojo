@@ -28,13 +28,16 @@ export default function SignupPage() {
       return
     }
 
-    const { error: authError } = await signUp(email, password, displayName)
+    const { error: authError, needsConfirmation } = await signUp(email, password, displayName)
     if (authError) {
       setError(authError.message)
       setLoading(false)
-    } else {
+    } else if (needsConfirmation) {
       setSuccess(true)
       setLoading(false)
+    } else {
+      // Confirmation disabled: user is already signed in
+      router.push('/')
     }
   }
 
